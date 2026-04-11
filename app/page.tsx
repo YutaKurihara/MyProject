@@ -56,9 +56,9 @@ export default function Home() {
         <div className="mx-auto max-w-5xl px-6">
           <h1 className="mb-3 text-3xl font-bold md:text-4xl">MyProject</h1>
           <p className="max-w-2xl text-sm leading-relaxed text-teal-100">
-            途上国の防災・減災を支援するオープンツール集。
+            オリエンタルコンサルタンツグローバルのマイプロジェクトにて作成された、途上国の防災・減災を支援するオープンツール集。
             衛星画像による被害可視化から気候変動影響評価、マクロ経済モデルまで、
-            災害リスクの全体像を捉えるツールを開発しています。
+            様々な災害リスクの全体像を捉えるツールを開発しました。
           </p>
         </div>
       </section>
