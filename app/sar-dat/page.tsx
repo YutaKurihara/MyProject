@@ -75,7 +75,7 @@ export default function SarDatPage() {
       {/* ===== 概要 ===== */}
       <Section title="概要">
         <p className="mb-3 text-sm text-muted">
-          SAR-DATは、Google Earth Engine（GEE）上でSAR衛星画像（Sentinel-1）を用いて、
+          SAR-DAT（SAR Satellite Disaster Analysis Tool）は、Google Earth Engine（GEE）上でSAR衛星画像（Sentinel-1）を用いて、
           過去の災害被害を可視化するツールです。UIパネルから操作でき、コードの知識は不要です。
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
