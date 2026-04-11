@@ -213,10 +213,14 @@ export default function SarDatPage() {
 
       {/* ===== Landslide Analysis ===== */}
       <Section title="02 Landslide Analysis（土砂崩れ解析）">
+        <p className="mb-4 text-sm text-muted">
+          光学衛星（Sentinel-2）の<strong className="text-foreground">NDVI（植生指数）の変化</strong>を利用して土砂崩れ範囲を検出します。
+          土砂崩れが発生すると植生が失われNDVIが低下するため、災害前後のNDVI差分から崩壊箇所を特定します。
+        </p>
         <Step num={1} title="パラメータを設定">
           <Screenshot
             src={img("slide10_0.png")}
-            alt="Landslide Analysis: パラメータ設定画面。発生日・偏波・Slope・Curvature・閾値を設定"
+            alt="Landslide Analysis: パラメータ設定画面。発生日・Slope・Curvature・雲被覆閾値を設定"
           />
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs">
@@ -230,10 +234,9 @@ export default function SarDatPage() {
               <tbody>
                 {[
                   ["発生日", "土砂崩れ発生日", "-"],
-                  ["偏波", "VV / VH", "VH"],
-                  ["Slope", "斜度閾値（°）。上げると解析範囲が狭まる", "5"],
+                  ["Slope", "斜度閾値（°）。設定値以上の斜面のみ解析対象", "5"],
                   ["Curvature", "曲率半径（m）。上げると解析範囲が広がる", "200"],
-                  ["閾値", "検出感度。上げると範囲が狭まる", "1.9"],
+                  ["Cloud Probability", "雲被覆率の閾値（%）。これ以上の画像は除外", "50"],
                 ].map(([p, d, r], i) => (
                   <tr key={p} className={i % 2 === 0 ? "bg-[#f0f4f8] dark:bg-[#1e293b]" : ""}>
                     <td className="border border-border px-3 py-2 font-medium">{p}</td>
@@ -251,17 +254,22 @@ export default function SarDatPage() {
             alt="Landslide Analysis 結果: 2018年北海道胆振東部地震による厚真町の土砂崩れ範囲（赤色）。光学衛星画像と重ねて表示"
           />
           <p>土砂崩れ範囲が赤色で表示されます。上の例は2018年北海道胆振東部地震による厚真町の土砂崩れです。</p>
-          <Tip>Ascending・Descending両方の衛星軌道のデータを使用して死角をなくしています。</Tip>
         </Step>
 
         <div className="mt-4 rounded-md border border-border bg-[#f3f4f6] p-4 dark:bg-[#1e293b]">
-          <p className="mb-1 text-xs font-bold">検出アルゴリズム</p>
+          <p className="mb-2 text-xs font-bold">検出アルゴリズム</p>
           <p className="font-mono text-xs text-muted">
-            反射強度差 = δ<sub>after</sub> - δ<sub>before</sub>
+            NDVI差分 = NDVI<sub>after</sub> - NDVI<sub>before</sub>
           </p>
-          <p className="mt-1 text-xs text-muted">
-            差 &lt; 1.9（閾値）→ 土砂崩れと判定。前後各最長1年間の画像を平均化して比較。Slope ≤ 5°、Curvature半径 ≤ 200m は除外。
+          <p className="mt-2 text-xs text-muted">
+            災害前後各最長1年間のSentinel-2画像をモザイク合成し、雲を除去した上でNDVIを計算。
+            NDVI差分 &gt; 0.25 の領域を土砂崩れ候補として抽出。さらに以下の条件でフィルタリング：
           </p>
+          <ul className="ml-4 mt-1 list-disc text-xs text-muted">
+            <li>森林域のみを対象（非森林域は除外）</li>
+            <li>MNDWI &gt; 0（水域）または BSI &gt; 0.05（裸地）の場合、土砂崩れと判定</li>
+            <li>Slope ≤ 5°、Curvature半径 ≤ 200m の領域は除外</li>
+          </ul>
         </div>
       </Section>
 
