@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "SAR-DAT Manual | MyProject",
 };
+
+const IMG = process.env.__NEXT_ROUTER_BASEPATH || "";
+const img = (name: string) => `${IMG}/images/sar-dat/${name}`;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -17,7 +21,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Step({ num, title, children }: { num: number; title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-5">
+    <div className="mb-6">
       <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-accent">
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs text-white">
           {num}
@@ -38,6 +42,21 @@ function Tip({ children }: { children: React.ReactNode }) {
   );
 }
 
+function Screenshot({ src, alt }: { src: string; alt: string }) {
+  return (
+    <figure className="my-4">
+      <Image
+        src={src}
+        alt={alt}
+        width={1200}
+        height={600}
+        className="w-full rounded-lg border border-border"
+      />
+      <figcaption className="mt-1 text-xs text-muted">{alt}</figcaption>
+    </figure>
+  );
+}
+
 export default function SarDatPage() {
   return (
     <div className="mx-auto max-w-[960px] px-4 py-10">
@@ -53,16 +72,17 @@ export default function SarDatPage() {
         </p>
       </header>
 
+      {/* ===== 概要 ===== */}
       <Section title="概要">
         <p className="mb-3 text-sm text-muted">
           SAR-DATは、Google Earth Engine（GEE）上でSAR衛星画像（Sentinel-1）を用いて、
-          過去の災害被害を可視化するツールです。以下の3種類の解析が可能です。
+          過去の災害被害を可視化するツールです。UIパネルから操作でき、コードの知識は不要です。
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { name: "Flood Analysis", desc: "洪水範囲の検出" },
-            { name: "Landslide Analysis", desc: "土砂崩れ範囲の検出" },
-            { name: "Damage Analysis", desc: "建物被害範囲の検出" },
+            { name: "01 Flood Analysis", desc: "洪水範囲の検出" },
+            { name: "02 Landslide Analysis", desc: "土砂崩れ範囲の検出" },
+            { name: "03 Damage Analysis", desc: "建物被害範囲の検出" },
           ].map((item) => (
             <div key={item.name} className="rounded-md border border-border p-3 text-center">
               <p className="text-sm font-bold">{item.name}</p>
@@ -72,17 +92,18 @@ export default function SarDatPage() {
         </div>
       </Section>
 
+      {/* ===== セットアップ ===== */}
       <Section title="セットアップ">
-        <Step num={1} title="Google Earth Engineに登録する">
+        <Step num={1} title="Google Earth Engineに登録">
           <p>
             <a href="https://earthengine.google.com/" target="_blank" rel="noopener noreferrer" className="text-accent underline">
-              https://earthengine.google.com/
+              earthengine.google.com
             </a>
-            {" "}からGoogleアカウントでGEEに登録します。
+            からGoogleアカウントでGEEに登録します。
           </p>
         </Step>
-        <Step num={2} title="SAR-DATのコードを取得する">
-          <p>以下のURLをクリックすると、GEEのScriptsにSAR-DATが追加されます。</p>
+        <Step num={2} title="SAR-DATのコードを取得">
+          <p>以下のリンクをクリックすると、ScriptsのReaderにSAR-DATが追加されます。</p>
           <a
             href="https://code.earthengine.google.com/?accept_repo=users/kurihara-yt/MyProject1"
             target="_blank"
@@ -91,38 +112,44 @@ export default function SarDatPage() {
           >
             SAR-DATを取得 &rarr;
           </a>
-          <p className="mt-2">
-            ScriptsのReaderに <code className="rounded bg-[#f3f4f6] px-1.5 py-0.5 text-xs dark:bg-[#334155]">users/kurihara-yt/MyProject1</code> が表示されれば完了です。
-          </p>
-          <Tip>
-            権限がない場合は kurihara-yt@ocglobal.jp まで連絡してください。
-          </Tip>
+          <Screenshot
+            src={img("slide04_0.png")}
+            alt="Scriptsパネルに users/kurihara-yt/MyProject1 が追加された状態"
+          />
+          <Tip>権限がない場合は kurihara-yt@ocglobal.jp まで連絡してください。</Tip>
         </Step>
       </Section>
 
+      {/* ===== 基本操作 ===== */}
       <Section title="基本操作">
+        <Screenshot
+          src={img("slide06_0.png")}
+          alt="GEE初期画面。左のScriptsパネルに3つの解析スクリプトが表示されている"
+        />
         <Step num={1} title="解析ツールを選択">
-          <p>UIパネルから解析種類を選びます。</p>
+          <p>左のScriptsパネルから使用する解析スクリプトをクリックして開きます。</p>
           <ul className="ml-4 mt-1 list-disc space-y-1">
-            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">01 Flood Analysis</code> — 洪水解析</li>
-            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">02 Landslide Analysis</code> — 土砂崩れ解析</li>
-            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">03 Damage Analysis</code> — 建物被害解析</li>
+            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">01_Flood_Analysis</code></li>
+            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">02_Landslide_Analysis</code></li>
+            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">03_Damage_Analysis</code></li>
           </ul>
         </Step>
         <Step num={2} title="解析範囲を囲む">
           <p>地図上でポリゴンツールを使い、解析対象範囲を描画します。</p>
-          <Tip>ジオメトリは1つまでです。範囲を変更した場合は再度Runを押してください。</Tip>
+          <Tip>ジオメトリは1つまでです。</Tip>
         </Step>
         <Step num={3} title="Runを押す">
-          <p>解析が開始されます。結果はマップ上にレイヤーとして表示されます。</p>
+          <p>画面上部の<strong className="text-foreground">Run</strong>ボタンを押すと、UIパネルが表示されます。解析範囲を変更した場合は、毎回Runを押し直してください。</p>
         </Step>
       </Section>
 
+      {/* ===== Flood Analysis ===== */}
       <Section title="01 Flood Analysis（洪水解析）">
-        <p className="mb-4 text-sm text-muted">
-          災害前後のSAR画像の反射強度を比較し、著しく低下した領域を浸水域として検出します。
-        </p>
         <Step num={1} title="パラメータを設定">
+          <Screenshot
+            src={img("slide07_0.png")}
+            alt="Flood Analysis: パラメータ設定画面。左のUIパネルで日付・軌道・偏波・閾値を設定し、地図上にジオメトリで範囲を指定"
+          />
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs">
               <thead>
@@ -133,42 +160,40 @@ export default function SarDatPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">洪水発生日</td>
-                  <td className="border border-border px-3 py-2">解析対象の災害発生日</td>
-                  <td className="border border-border px-3 py-2">-</td>
-                </tr>
-                <tr>
-                  <td className="border border-border px-3 py-2 font-medium">比較画像日</td>
-                  <td className="border border-border px-3 py-2">災害前の基準日（雨が降っていない日を選択）</td>
-                  <td className="border border-border px-3 py-2">-</td>
-                </tr>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">衛星軌道</td>
-                  <td className="border border-border px-3 py-2">Ascending / Descending</td>
-                  <td className="border border-border px-3 py-2">両方試す</td>
-                </tr>
-                <tr>
-                  <td className="border border-border px-3 py-2 font-medium">偏波</td>
-                  <td className="border border-border px-3 py-2">VV / VH</td>
-                  <td className="border border-border px-3 py-2">VV</td>
-                </tr>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">閾値</td>
-                  <td className="border border-border px-3 py-2">洪水検出の感度。下げると範囲が広がる</td>
-                  <td className="border border-border px-3 py-2">1.15</td>
-                </tr>
+                {[
+                  ["洪水発生日（After）", "解析対象の災害発生日", "-"],
+                  ["比較画像日（Before）", "災害前の基準日。雨が降っていない日を選択", "-"],
+                  ["衛星軌道", "Ascending / Descending（画像取得日時が異なるため両方試す）", "両方"],
+                  ["偏波", "VV / VH", "VV"],
+                  ["閾値（Threshold）", "洪水検出の感度。下げると範囲拡大", "1.15"],
+                ].map(([p, d, r], i) => (
+                  <tr key={p} className={i % 2 === 0 ? "bg-[#f0f4f8] dark:bg-[#1e293b]" : ""}>
+                    <td className="border border-border px-3 py-2 font-medium">{p}</td>
+                    <td className="border border-border px-3 py-2">{d}</td>
+                    <td className="border border-border px-3 py-2">{r}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </Step>
-        <Step num={2} title="Applyを押す">
-          <p>解析が実行され、マップ上に洪水範囲・土地利用・人口分布のレイヤーが表示されます。</p>
+        <Step num={2} title="Applyを押して結果を確認">
+          <Screenshot
+            src={img("slide08_0.png")}
+            alt="Flood Analysis 結果: フィリピンCagayan地域の洪水範囲（紫色）が地図上に表示。右側にResultsパネルで浸水面積・被災人口の概算値"
+          />
+          <p>マップ上に洪水範囲（紫色）が表示されます。右側のResultsパネルには浸水面積・被災人口などの概算値が表示されます。</p>
         </Step>
-        <Step num={3} title="結果をエクスポート">
+        <Step num={3} title="Consoleで使用データを確認">
+          <Screenshot
+            src={img("slide09_0.png")}
+            alt="Console画面: Sentinel-1/2の撮影日・画像枚数など使用データのプロパティが確認できる"
+          />
+          <p>Consoleタブで、解析に使用されたSentinel-1/2画像の撮影日・枚数等を確認できます。</p>
+        </Step>
+        <Step num={4} title="結果をエクスポート">
           <p>
-            Tasksタブから解析結果をKMLまたはGeoTIFF形式でダウンロードできます。
-            データはGoogle Driveに自動保存されます。
+            <strong className="text-foreground">Tasks</strong>タブからKML / GeoTIFF形式でダウンロード可能。Google Driveに自動保存されます。
           </p>
           <Tip>解像度は最大10mですが、解析範囲が広すぎると解像度が下がります。</Tip>
         </Step>
@@ -179,17 +204,18 @@ export default function SarDatPage() {
             反射強度変化 = δ<sub>after</sub> / δ<sub>before</sub>
           </p>
           <p className="mt-1 text-xs text-muted">
-            反射強度変化 &lt; 1.15 の場合、洪水と判定。
-            恒常的な水域および傾斜5°以上の領域は除外。
+            比率 &lt; 1.15（閾値）→ 洪水と判定。恒常的水域・傾斜5°以上は除外。
           </p>
         </div>
       </Section>
 
+      {/* ===== Landslide Analysis ===== */}
       <Section title="02 Landslide Analysis（土砂崩れ解析）">
-        <p className="mb-4 text-sm text-muted">
-          災害前後各最長1年間のSAR画像を平均化し、反射強度の差分から土砂崩れ範囲を検出します。
-        </p>
         <Step num={1} title="パラメータを設定">
+          <Screenshot
+            src={img("slide10_0.png")}
+            alt="Landslide Analysis: パラメータ設定画面。発生日・偏波・Slope・Curvature・閾値を設定"
+          />
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs">
               <thead>
@@ -200,39 +226,30 @@ export default function SarDatPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">発生日</td>
-                  <td className="border border-border px-3 py-2">土砂崩れ発生日</td>
-                  <td className="border border-border px-3 py-2">-</td>
-                </tr>
-                <tr>
-                  <td className="border border-border px-3 py-2 font-medium">偏波</td>
-                  <td className="border border-border px-3 py-2">VV / VH</td>
-                  <td className="border border-border px-3 py-2">VH</td>
-                </tr>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">Slope</td>
-                  <td className="border border-border px-3 py-2">斜度閾値（度数）。上げると解析範囲が狭まる</td>
-                  <td className="border border-border px-3 py-2">5</td>
-                </tr>
-                <tr>
-                  <td className="border border-border px-3 py-2 font-medium">Curvature</td>
-                  <td className="border border-border px-3 py-2">曲率半径（m）。上げると解析範囲が広がる</td>
-                  <td className="border border-border px-3 py-2">200</td>
-                </tr>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">閾値</td>
-                  <td className="border border-border px-3 py-2">検出感度。上げると範囲が狭まる</td>
-                  <td className="border border-border px-3 py-2">1.9</td>
-                </tr>
+                {[
+                  ["発生日", "土砂崩れ発生日", "-"],
+                  ["偏波", "VV / VH", "VH"],
+                  ["Slope", "斜度閾値（°）。上げると解析範囲が狭まる", "5"],
+                  ["Curvature", "曲率半径（m）。上げると解析範囲が広がる", "200"],
+                  ["閾値", "検出感度。上げると範囲が狭まる", "1.9"],
+                ].map(([p, d, r], i) => (
+                  <tr key={p} className={i % 2 === 0 ? "bg-[#f0f4f8] dark:bg-[#1e293b]" : ""}>
+                    <td className="border border-border px-3 py-2 font-medium">{p}</td>
+                    <td className="border border-border px-3 py-2">{d}</td>
+                    <td className="border border-border px-3 py-2">{r}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </Step>
         <Step num={2} title="Applyを押して結果を確認">
-          <p>
-            災害前後各最長1年間のSAR画像をAscending・Descending両方から取得・平均化し、差分を計算します。
-          </p>
+          <Screenshot
+            src={img("slide11_0.png")}
+            alt="Landslide Analysis 結果: 2018年北海道胆振東部地震による厚真町の土砂崩れ範囲（赤色）。光学衛星画像と重ねて表示"
+          />
+          <p>土砂崩れ範囲が赤色で表示されます。上の例は2018年北海道胆振東部地震による厚真町の土砂崩れです。</p>
+          <Tip>Ascending・Descending両方の衛星軌道のデータを使用して死角をなくしています。</Tip>
         </Step>
 
         <div className="mt-4 rounded-md border border-border bg-[#f3f4f6] p-4 dark:bg-[#1e293b]">
@@ -241,17 +258,18 @@ export default function SarDatPage() {
             反射強度差 = δ<sub>after</sub> - δ<sub>before</sub>
           </p>
           <p className="mt-1 text-xs text-muted">
-            反射強度差 &lt; 1.9 の場合、土砂崩れと判定。
-            Slope ≤ 5°、Curvature半径 ≤ 200m の領域は除外。
+            差 &lt; 1.9（閾値）→ 土砂崩れと判定。前後各最長1年間の画像を平均化して比較。Slope ≤ 5°、Curvature半径 ≤ 200m は除外。
           </p>
         </div>
       </Section>
 
+      {/* ===== Damage Analysis ===== */}
       <Section title="03 Damage Analysis（建物被害解析）">
-        <p className="mb-4 text-sm text-muted">
-          災害前後のSAR画像の反射強度変化から、倒壊建物の分布を検出します。
-        </p>
         <Step num={1} title="パラメータを設定">
+          <Screenshot
+            src={img("slide13_0.png")}
+            alt="Damage Analysis: パラメータ設定画面。災害発生日・比較画像日・軌道・偏波・閾値を設定"
+          />
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-xs">
               <thead>
@@ -262,41 +280,36 @@ export default function SarDatPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">災害発生日</td>
-                  <td className="border border-border px-3 py-2">解析対象の日付</td>
-                  <td className="border border-border px-3 py-2">-</td>
-                </tr>
-                <tr>
-                  <td className="border border-border px-3 py-2 font-medium">比較画像日</td>
-                  <td className="border border-border px-3 py-2">災害前の基準日</td>
-                  <td className="border border-border px-3 py-2">-</td>
-                </tr>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">衛星軌道</td>
-                  <td className="border border-border px-3 py-2">両方試す（建物の側面を両方向から観測するため）</td>
-                  <td className="border border-border px-3 py-2">両方</td>
-                </tr>
-                <tr>
-                  <td className="border border-border px-3 py-2 font-medium">偏波</td>
-                  <td className="border border-border px-3 py-2">VV / VH</td>
-                  <td className="border border-border px-3 py-2">VV</td>
-                </tr>
-                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                  <td className="border border-border px-3 py-2 font-medium">閾値</td>
-                  <td className="border border-border px-3 py-2">検出感度。上げると範囲が狭まる</td>
-                  <td className="border border-border px-3 py-2">2</td>
-                </tr>
+                {[
+                  ["災害発生日（After）", "解析対象の日付", "-"],
+                  ["比較画像日（Before）", "災害前の基準日", "-"],
+                  ["衛星軌道", "両方試す（建物の両側面を観測するため）", "両方"],
+                  ["偏波", "VV / VH", "VV"],
+                  ["閾値", "検出感度。上げると範囲が狭まる", "2"],
+                ].map(([p, d, r], i) => (
+                  <tr key={p} className={i % 2 === 0 ? "bg-[#f0f4f8] dark:bg-[#1e293b]" : ""}>
+                    <td className="border border-border px-3 py-2 font-medium">{p}</td>
+                    <td className="border border-border px-3 py-2">{d}</td>
+                    <td className="border border-border px-3 py-2">{r}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-          <Tip>
-            建物被害の場合、反射強度が上がることも下がることもあります（二重散乱の変化）。
-            Ascending・Descending両方で解析すると死角をなくせます。
-          </Tip>
         </Step>
         <Step num={2} title="Applyを押して結果を確認">
-          <p>農地・湿地・森林は自動で除外され、建物エリアのみが解析対象になります。</p>
+          <Screenshot
+            src={img("slide14_0.png")}
+            alt="Damage Analysis 結果: 2023年トルコ・シリア地震によるKahramanmaras市の建物被害範囲。衛星画像と重ねて表示"
+          />
+          <p>
+            建物被害範囲が表示されます。上の例は2023年トルコ・シリア地震によるKahramanmaras市の建物倒壊検出結果です。
+            農地・湿地・森林は自動で除外されます。
+          </p>
+          <Tip>
+            建物被害の場合、反射強度が上がることも下がることもあります（建物倒壊による二重散乱の変化）。
+            Ascending・Descending両方で解析すると死角をなくせます。
+          </Tip>
         </Step>
 
         <div className="mt-4 rounded-md border border-border bg-[#f3f4f6] p-4 dark:bg-[#1e293b]">
@@ -305,11 +318,12 @@ export default function SarDatPage() {
             反射強度変化 = δ<sub>after</sub> / δ<sub>before</sub>
           </p>
           <p className="mt-1 text-xs text-muted">
-            反射強度変化の絶対値が閾値（デフォルト2.0）を超えた場合、建物被害と判定。
+            変化の絶対値が閾値（デフォルト2.0）を超えた場合、建物被害と判定。
           </p>
         </div>
       </Section>
 
+      {/* ===== データソース ===== */}
       <Section title="使用データソース">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
@@ -339,10 +353,7 @@ export default function SarDatPage() {
       </Section>
 
       <div className="text-center">
-        <a
-          href="/MyProject/"
-          className="text-sm text-accent hover:underline"
-        >
+        <a href="/MyProject/" className="text-sm text-accent hover:underline">
           &larr; MyProject トップへ戻る
         </a>
       </div>
