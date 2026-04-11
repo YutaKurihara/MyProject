@@ -19,10 +19,14 @@ const tools = [
     subtitle: "Flood Direct Damage Estimation",
     period: "第10期（2023年）",
     description:
-      "SAR-DATを発展させ、浸水深の推定（FwDET）と建物・農作物の直接被害額算定を追加。フィリピンを対象に、現地調査なしで被害額を推定する。",
+      "SAR-DATを発展させ、浸水深の推定（FwDET）と建物・農作物の直接被害額算定を追加。フィリピンを対象に、現地調査なしで被害額を推定する。2つのスクリプトで構成: (1) 土地利用図作成（Random Forest）、(2) 洪水被害額計算（FwDET + 被害曲線）。",
     status: "coming" as const,
     toolLink: null,
     docLink: null,
+    downloads: [
+      { label: "01_LULC_RandomForest.js", href: "https://yutakurihara.github.io/research-website/gee/01_LULC_RandomForest.js" },
+      { label: "02_Flood_DirectDamage.js", href: "https://yutakurihara.github.io/research-website/gee/02_Flood_DirectDamage.js" },
+    ],
   },
   {
     id: "gcm-tool",
@@ -115,6 +119,21 @@ export default function Home() {
                       Manual
                     </Link>
                   )}
+                </div>
+              )}
+              {"downloads" in tool && tool.downloads && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(tool.downloads as { label: string; href: string }[]).map((dl) => (
+                    <a
+                      key={dl.label}
+                      href={dl.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded border border-border px-3 py-1.5 text-[11px] text-muted transition-colors hover:border-accent hover:text-accent"
+                    >
+                      {dl.label}
+                    </a>
+                  ))}
                 </div>
               )}
             </div>
