@@ -52,7 +52,7 @@ const tools = [
 export default function Home() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
-      <h1 className="mb-1 text-2xl font-bold">Opendata</h1>
+      <h1 className="mb-1 text-2xl font-bold">Tools</h1>
       <p className="mb-10 text-sm text-muted">
         防災・気候変動分野のオープンツール集
       </p>

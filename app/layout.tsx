@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Opendata | Kurihara Yuta",
+  title: "Tools | Kurihara Yuta",
   description: "Open tools for disaster risk assessment and climate change impact analysis.",
 };
 
@@ -30,7 +30,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <header className="border-b border-border bg-card-bg/80 backdrop-blur-md">
           <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-            <span className="text-sm font-semibold tracking-tight">Opendata</span>
+            <span className="text-sm font-semibold tracking-tight">Tools</span>
           </div>
         </header>
         <main className="flex-1">{children}</main>
