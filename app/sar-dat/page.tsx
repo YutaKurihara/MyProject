@@ -42,14 +42,14 @@ function Tip({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Screenshot({ src, alt }: { src: string; alt: string }) {
+function Screenshot({ src, alt, narrow }: { src: string; alt: string; narrow?: boolean }) {
   return (
-    <figure className="my-4">
+    <figure className={`my-4 ${narrow ? "mx-auto max-w-xs" : ""}`}>
       <Image
         src={src}
         alt={alt}
-        width={1200}
-        height={600}
+        width={narrow ? 400 : 1200}
+        height={narrow ? 600 : 600}
         className="w-full rounded-lg border border-border"
       />
       <figcaption className="mt-1 text-xs text-muted">{alt}</figcaption>
@@ -115,6 +115,7 @@ export default function SarDatPage() {
           <Screenshot
             src={img("slide04_0.png")}
             alt="Scriptsパネルに users/kurihara-yt/MyProject1 が追加された状態"
+            narrow
           />
           <Tip>権限がない場合は kurihara-yt@ocglobal.jp まで連絡してください。</Tip>
         </Step>
@@ -188,6 +189,7 @@ export default function SarDatPage() {
           <Screenshot
             src={img("slide09_0.png")}
             alt="Console画面: Sentinel-1/2の撮影日・画像枚数など使用データのプロパティが確認できる"
+            narrow
           />
           <p>Consoleタブで、解析に使用されたSentinel-1/2画像の撮影日・枚数等を確認できます。</p>
         </Step>
