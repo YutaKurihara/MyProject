@@ -113,7 +113,7 @@ export default function SarDatPage() {
             SAR-DATを取得 &rarr;
           </a>
           <Screenshot
-            src={img("slide04_0.png")}
+            src={img("slide04_0.jpg")}
             alt="Scriptsパネルに users/kurihara-yt/MyProject1 が追加された状態"
             narrow
           />
@@ -124,7 +124,7 @@ export default function SarDatPage() {
       {/* ===== 基本操作 ===== */}
       <Section title="基本操作">
         <Screenshot
-          src={img("slide06_0.png")}
+          src={img("slide06_0.jpg")}
           alt="GEE初期画面。左のScriptsパネルに3つの解析スクリプトが表示されている"
         />
         <Step num={1} title="解析ツールを選択">
@@ -148,7 +148,7 @@ export default function SarDatPage() {
       <Section title="01 Flood Analysis（洪水解析）">
         <Step num={1} title="パラメータを設定">
           <Screenshot
-            src={img("slide07_0.png")}
+            src={img("slide07_0.jpg")}
             alt="Flood Analysis: パラメータ設定画面。左のUIパネルで日付・軌道・偏波・閾値を設定し、地図上にジオメトリで範囲を指定"
           />
           <div className="overflow-x-auto">
@@ -180,14 +180,14 @@ export default function SarDatPage() {
         </Step>
         <Step num={2} title="Applyを押して結果を確認">
           <Screenshot
-            src={img("slide08_0.png")}
+            src={img("slide08_0.jpg")}
             alt="Flood Analysis 結果: フィリピンCagayan地域の洪水範囲（紫色）が地図上に表示。右側にResultsパネルで浸水面積・被災人口の概算値"
           />
           <p>マップ上に洪水範囲（紫色）が表示されます。右側のResultsパネルには浸水面積・被災人口などの概算値が表示されます。</p>
         </Step>
         <Step num={3} title="Consoleで使用データを確認">
           <Screenshot
-            src={img("slide09_0.png")}
+            src={img("slide09_0.jpg")}
             alt="Console画面: Sentinel-1/2の撮影日・画像枚数など使用データのプロパティが確認できる"
             narrow
           />
@@ -219,7 +219,7 @@ export default function SarDatPage() {
         </p>
         <Step num={1} title="パラメータを設定">
           <Screenshot
-            src={img("slide10_0.png")}
+            src={img("slide10_0.jpg")}
             alt="Landslide Analysis: パラメータ設定画面。発生日・Slope・Curvature・雲被覆閾値を設定"
           />
           <div className="overflow-x-auto">
@@ -250,7 +250,7 @@ export default function SarDatPage() {
         </Step>
         <Step num={2} title="Applyを押して結果を確認">
           <Screenshot
-            src={img("slide11_0.png")}
+            src={img("slide11_0.jpg")}
             alt="Landslide Analysis 結果: 2018年北海道胆振東部地震による厚真町の土砂崩れ範囲（赤色）。光学衛星画像と重ねて表示"
           />
           <p>土砂崩れ範囲が赤色で表示されます。上の例は2018年北海道胆振東部地震による厚真町の土砂崩れです。</p>
@@ -277,7 +277,7 @@ export default function SarDatPage() {
       <Section title="03 Damage Analysis（建物被害解析）">
         <Step num={1} title="パラメータを設定">
           <Screenshot
-            src={img("slide13_0.png")}
+            src={img("slide13_0.jpg")}
             alt="Damage Analysis: パラメータ設定画面。災害発生日・比較画像日・軌道・偏波・閾値を設定"
           />
           <div className="overflow-x-auto">
@@ -309,7 +309,7 @@ export default function SarDatPage() {
         </Step>
         <Step num={2} title="Applyを押して結果を確認">
           <Screenshot
-            src={img("slide14_0.png")}
+            src={img("slide14_0.jpg")}
             alt="Damage Analysis 結果: 2023年トルコ・シリア地震によるKahramanmaras市の建物被害範囲。衛星画像と重ねて表示"
           />
           <p>
