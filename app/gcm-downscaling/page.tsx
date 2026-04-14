@@ -330,12 +330,35 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
           グリッドセルごとの時系列CSVに整理します。
         </p>
 
-        <Step num={1} title="対象モデルを設定">
+        <Step num={1} title="対象GCMモデルをチェックボックスで選択">
           <p>
-            「設定」セルで、Notebook 1で選定した精度の高いモデルを指定します
-            （<strong className="text-foreground">5つ以下を推奨</strong>）。
-            多すぎるとダウンロード時間・容量が膨大になります。
+            セル2の <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">MODEL_CFG</code>
+            には全34モデルが登録されています。実行すると、各モデルのチェックボックスが
+            3列で表示されます。
           </p>
+          <ul className="ml-4 mt-2 list-disc space-y-1">
+            <li>
+              <strong className="text-foreground">デフォルト (3モデル)</strong>:
+              Notebook 1で精度が高かった3モデル（ACCESS-CM2、CanESM5、EC-Earth3-Veg-LR）
+              がチェック済み
+            </li>
+            <li>
+              <strong className="text-foreground">すべて選択</strong>:
+              全34モデルをチェック
+            </li>
+            <li>
+              <strong className="text-foreground">すべて解除</strong>:
+              チェックをクリア
+            </li>
+          </ul>
+          <p className="mt-2">
+            チェック後、次のセル（選択したモデルを確定）を実行すると
+            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">models</code>
+            変数に選択結果が反映されます。
+          </p>
+          <Tip>
+            5つ以下のモデルに絞ることを推奨します。多すぎるとダウンロード時間・容量が膨大になります。
+          </Tip>
         </Step>
 
         <Step num={2} title="期間レンジを設定">
