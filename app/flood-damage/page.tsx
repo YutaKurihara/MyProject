@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import CodeBlock from "@/components/CodeBlock";
 
 export const metadata: Metadata = {
   title: "洪水直接被害計算ツール Manual | MyProject",
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
 
 const IMG = process.env.__NEXT_ROUTER_BASEPATH || "";
 const img = (name: string) => `${IMG}/images/flood-damage/${name}`;
+const gee = (name: string) => `${IMG}/gee/${name}`;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -229,6 +231,12 @@ export default function FloodDamagePage() {
             MERIT Hydro地形（標高・傾斜・集水面積 = 3）
           </p>
         </div>
+
+        <h3 className="mt-6 mb-2 text-sm font-bold text-accent">ソースコード</h3>
+        <p className="mb-2 text-xs text-muted">
+          以下のコードをGEEのコードエディタに貼り付けても同じツールが動作します。
+        </p>
+        <CodeBlock src={gee("01_LandUseMapping.js")} label="01_LandUseMapping.js" />
       </Section>
 
       {/* ===== Assetへのアップロード ===== */}
@@ -381,6 +389,12 @@ export default function FloodDamagePage() {
             <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">AOI</code> — 解析範囲（SHP）</li>
           </ul>
         </Step>
+
+        <h3 className="mt-6 mb-2 text-sm font-bold text-accent">ソースコード</h3>
+        <p className="mb-2 text-xs text-muted">
+          以下のコードをGEEのコードエディタに貼り付けても同じツールが動作します。
+        </p>
+        <CodeBlock src={gee("02_FloodDirectDamage.js")} label="02_FloodDirectDamage.js" />
       </Section>
 
       {/* ===== 被害曲線 ===== */}
