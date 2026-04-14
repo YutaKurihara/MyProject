@@ -4,6 +4,8 @@ export const metadata: Metadata = {
   title: "GCM ダウンスケーリングツール Manual | MyProject",
 };
 
+const BP = process.env.__NEXT_ROUTER_BASEPATH || "";
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-8 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
@@ -49,36 +51,74 @@ export default function GcmDownscalingPage() {
           GCM Downscaling Tool for Climate Change Impact Assessment
         </p>
         <p className="mt-1 text-xs text-muted">
-          オリエンタルコンサルタンツグローバル 水資源・防災部
+          オリエンタルコンサルタンツグローバル プランニング事業部
         </p>
       </header>
 
-      {/* ===== 概要 ===== */}
-      <Section title="概要">
+      {/* ===== 研究背景 ===== */}
+      <Section title="本ツールの位置づけ">
         <p className="mb-3 text-sm text-muted">
-          NASA NEX-GDDP-CMIP6のGCM（全球気候モデル）データを、
-          GSMaP衛星観測または地上観測データを用いて
-          <strong className="text-foreground">順序統計量補正法（Quantile Mapping）</strong>
-          でバイアス補正するツールです。
-          将来気候シナリオ（SSP2-4.5、SSP5-8.5等）における降水量予測を
-          対象地域に合わせて高精度化します。
+          本ツールは、
+          <strong className="text-foreground">
+            「フィリピン・カガヤンバレー地域における気候変動と土地利用の変化を考慮した将来の洪水リスク評価のためのAIと統計の統合フレームワーク」
+          </strong>
+          （第11期マイプロジェクト）の一部として開発されたものです。
+          将来の洪水リスク評価を行うためには、GCM（全球気候モデル）の降水量データを
+          対象地域のスケールに合わせてダウンスケーリングし、バイアスを補正する必要があります。
         </p>
         <p className="mb-3 text-sm text-muted">
-          5つのJupyter Notebookで構成され、
-          GCMモデルの精度評価からデータダウンロード、補正までを一貫して実行できます。
+          本マニュアルでは、CMIP6の複数のGCMから精度の高いモデルを選定し、
+          <strong className="text-foreground">NASA NEX-GDDP-CMIP6</strong>
+          のデータをダウンロード、GSMaP衛星観測または地上観測データを用いて
+          バイアス補正するまでの一連のワークフローを解説します。
+        </p>
+        <p className="text-sm text-muted">
+          補正後のデータは、水文モデル（RRI等）に入力することで、
+          将来の降水量・流量・浸水域の変化を評価できます。
+          プロジェクトではこの結果を用いて、100年確率洪水の流量が気候変動で
+          <strong className="text-foreground">56%増加</strong>、
+          浸水面積が<strong className="text-foreground">65%増加</strong>
+          することを示しました。
+        </p>
+      </Section>
+
+      {/* ===== 概要 ===== */}
+      <Section title="ツールの構成">
+        <p className="mb-3 text-sm text-muted">
+          5つのJupyter Notebookで構成されています。
+          実行順序は以下の通りです。
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {[
-            { name: "1. GCMsSelection", desc: "CMIP6 GCMの精度評価（ERA5との相関・RMSE）" },
-            { name: "2. DataDownload", desc: "GCMヒストリカル・将来データのダウンロード（S3）" },
-            { name: "3. GSMaPDownload", desc: "GSMaP衛星降水データの取得（GEE経由）" },
-            { name: "4a. Downscaling (GSMaP)", desc: "GSMaPでGCMをバイアス補正" },
-            { name: "4b. Downscaling (Observation)", desc: "地上観測でGCMをバイアス補正" },
+            { name: "1_GCMsSelection", desc: "CMIP6 GCMの精度評価（ERA5との相関・RMSE）" },
+            { name: "2_DataDownload", desc: "GCMヒストリカル・将来データのダウンロード（S3）" },
+            { name: "3_GSMaPDownload", desc: "GSMaP衛星降水データの取得（GEE経由）" },
+            { name: "4a_Downscaling_GSMaP", desc: "GSMaPでGCMをバイアス補正" },
+            { name: "4b_Downscaling_Observation", desc: "地上観測でGCMをバイアス補正" },
           ].map((item) => (
             <div key={item.name} className="rounded-md border border-border p-3">
               <p className="text-sm font-bold">{item.name}</p>
               <p className="text-xs text-muted">{item.desc}</p>
             </div>
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {[
+            "1_GCMsSelection.ipynb",
+            "2_DataDownload.ipynb",
+            "3_GSMaPDownload.ipynb",
+            "4a_Downscaling_GSMaP.ipynb",
+            "4b_Downscaling_Observation.ipynb",
+          ].map((f) => (
+            <a
+              key={f}
+              href={`${BP}/notebooks/gcm-downscaling/${f}`}
+              download
+              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+            >
+              {f}
+            </a>
           ))}
         </div>
       </Section>
@@ -87,32 +127,37 @@ export default function GcmDownscalingPage() {
       <Section title="事前準備">
         <Step num={1} title="必要なライブラリ">
           <p>Python環境（推奨: Google Colab）で以下のライブラリが必要です。</p>
-          <ul className="ml-4 mt-1 list-disc space-y-1">
-            <li>earthengine-api（Notebook 1, 3）</li>
-            <li>xarray, rioxarray, rasterio（Notebook 2）</li>
-            <li>geopandas, shapely（Notebook 2, 3）</li>
-            <li>pandas, numpy, matplotlib（Notebook 4a, 4b）</li>
-            <li>cftime（Notebook 2）</li>
-          </ul>
+          <pre className="my-2 overflow-x-auto rounded-md bg-[#1e293b] p-3 text-xs text-[#e2e8f0]">
+{`pip install earthengine-api geemap xarray rioxarray geopandas cftime s3fs`}
+          </pre>
         </Step>
 
-        <Step num={2} title="Earth Engineの認証">
+        <Step num={2} title="環境変数の設定">
           <p>
-            Notebook 1 と 3 はGoogle Earth Engineを使用します。
-            実行前に以下で認証してください：
+            各ノートブックの冒頭に共通の環境設定セルがあります。
+            初回実行時に以下の2つの環境変数を設定してください。
           </p>
           <pre className="my-2 overflow-x-auto rounded-md bg-[#1e293b] p-3 text-xs text-[#e2e8f0]">
-{`import ee
-ee.Authenticate()
-ee.Initialize(project='your-project-id')`}
+{`import os
+os.environ['GEE_PROJECT'] = 'your-ee-project-id'
+os.environ['OUTPUT_DIR'] = '/content/drive/MyDrive/Downscaling'  # または任意のパス`}
           </pre>
           <Tip>
-            コード内では <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">project=&apos;ee-kurihara-yt&apos;</code> とハードコードされている箇所があります。
-            実行時にご自身のGEEプロジェクトIDに置き換えてください。
+            ハードコードされたGEEプロジェクトIDやColabパスは環境変数化されているため、
+            ご自身の環境に合わせて変更するだけで動作します。
           </Tip>
         </Step>
 
-        <Step num={3} title="対象地域の定義">
+        <Step num={3} title="Earth Engineの認証">
+          <p>Notebook 1 と 3 はGoogle Earth Engineを使用します。</p>
+          <pre className="my-2 overflow-x-auto rounded-md bg-[#1e293b] p-3 text-xs text-[#e2e8f0]">
+{`import ee
+ee.Authenticate()
+ee.Initialize(project=GEE_PROJECT)`}
+          </pre>
+        </Step>
+
+        <Step num={4} title="対象地域の定義">
           <p>
             Notebook 2では、解析対象地域をGeoJSON形式で指定します。
             QGIS等で対象地域のポリゴンを作成し、GeoJSONとしてエクスポートしてください。
@@ -123,34 +168,45 @@ ee.Initialize(project='your-project-id')`}
       {/* ===== Notebook 1 ===== */}
       <Section title="Notebook 1: GCMs Selection（GCM精度評価）">
         <p className="mb-4 text-sm text-muted">
-          CMIP6の複数のGCMモデルの中から、対象地域で精度の高いモデルを選定します。
+          CMIP6の複数GCMの中から、対象地域で精度の高いモデルを選定します。
           ERA5再解析データ（1986〜2006年）をリファレンスとして、
           各GCMヒストリカルランとの相関係数とRMSEを計算します。
         </p>
 
         <Step num={1} title="入力データ">
           <ul className="ml-4 list-disc space-y-1">
-            <li>ERA5-Land降水量（観測リファレンス）</li>
+            <li>ERA5-Land月次降水量（観測リファレンス）</li>
             <li>NASA GDDP-CMIP6 Historical（各GCMモデル）</li>
             <li>対象地域ポリゴン</li>
           </ul>
         </Step>
 
-        <Step num={2} title="処理内容">
-          <p>
-            Earth Engine上で各GCMデータをERA5の0.25度グリッドにリサンプリングし、
-            月次降水量の時系列を取得。対象地域内の全ピクセルについて相関係数とRMSEを計算します。
-          </p>
+        <Step num={2} title="評価指標（第11期プロジェクトで採用）">
+          <p>プロジェクトではスコアリング方式で複数指標を総合評価しています。</p>
+          <ul className="ml-4 mt-1 list-disc space-y-1">
+            <li><strong className="text-foreground">相関係数</strong>（CF）</li>
+            <li><strong className="text-foreground">平均誤差</strong>（MAE）</li>
+            <li><strong className="text-foreground">RMSE</strong></li>
+            <li>年最大降水量、月別降水パターン等の指標も組み合わせ</li>
+          </ul>
         </Step>
 
-        <Step num={3} title="出力">
+        <Step num={3} title="出力と選定例">
           <p>
             <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">GCMs_Evaluation.csv</code>
-            — 各モデルの精度指標（相関係数、RMSE）が表形式で出力されます。
+            に各モデルのスコアが出力されます。
           </p>
+          <p className="mt-2">
+            カガヤンバレー地域でスコア9以上を記録した3モデルが選定されました：
+          </p>
+          <ul className="ml-4 mt-1 list-disc space-y-1">
+            <li><strong className="text-foreground">ACCESS-CM2</strong>（豪州CSIRO）</li>
+            <li><strong className="text-foreground">CanESM5</strong>（カナダ CCCma）</li>
+            <li><strong className="text-foreground">EC-Earth3-Veg-LR</strong>（欧州 EC-Earth Consortium）</li>
+          </ul>
           <Tip>
-            相関係数が高くRMSEが低いモデルを次のステップ（Notebook 2）で使用します。
-            一般的には複数モデルのアンサンブル平均を使うのが推奨されます。
+            単一モデルではなく複数モデルのアンサンブル平均を使うことで、
+            モデル間の不確実性を低減できます。
           </Tip>
         </Step>
       </Section>
@@ -158,33 +214,63 @@ ee.Initialize(project='your-project-id')`}
       {/* ===== Notebook 2 ===== */}
       <Section title="Notebook 2: Data Download（GCMデータ取得）">
         <p className="mb-4 text-sm text-muted">
-          NASA NEX-GDDP-CMIP6のデータをS3から直接ダウンロードし、
+          NASA NEX-GDDP-CMIP6のデータをAWS S3から直接ダウンロードし、
           対象地域のグリッドセルごとに時系列CSVに整理します。
         </p>
 
         <Step num={1} title="対象期間とシナリオ">
-          <ul className="ml-4 list-disc space-y-1">
-            <li><strong className="text-foreground">Historical</strong>: 1950〜2014年</li>
-            <li><strong className="text-foreground">Future</strong>: 2015〜2100年（SSP2-4.5, SSP5-8.5等）</li>
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr>
+                  <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">期間</th>
+                  <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">シナリオ</th>
+                  <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">用途</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-border px-3 py-2 font-medium">1950-2014</td>
+                  <td className="border border-border px-3 py-2">Historical</td>
+                  <td className="border border-border px-3 py-2 text-muted">バイアス補正の基準</td>
+                </tr>
+                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                  <td className="border border-border px-3 py-2 font-medium">2015-2100</td>
+                  <td className="border border-border px-3 py-2">SSP1-2.6（低排出）</td>
+                  <td className="border border-border px-3 py-2 text-muted">楽観的シナリオ</td>
+                </tr>
+                <tr>
+                  <td className="border border-border px-3 py-2 font-medium">2015-2100</td>
+                  <td className="border border-border px-3 py-2">SSP2-4.5（中排出）</td>
+                  <td className="border border-border px-3 py-2 text-muted">標準シナリオ</td>
+                </tr>
+                <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                  <td className="border border-border px-3 py-2 font-medium">2015-2100</td>
+                  <td className="border border-border px-3 py-2">SSP5-8.5（高排出）</td>
+                  <td className="border border-border px-3 py-2 text-muted">悲観的シナリオ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </Step>
 
         <Step num={2} title="グリッド作成">
           <p>
-            GCMの0.25度解像度に合わせて対象地域内のグリッドセルを自動生成。
+            GCMの0.25度（約28km）解像度に合わせて対象地域内のグリッドセルを自動生成。
             各セルにIDを付与してSHP形式で保存します。
+            第11期プロジェクトでは、カガヤンバレー地域に<strong className="text-foreground">36グリッド</strong>
+            が生成されました。
           </p>
         </Step>
 
         <Step num={3} title="データダウンロード">
           <p>
-            各GCMモデル × シナリオ × 変数（降水量・気温等）について、
-            AWS S3からNetCDFファイルをダウンロードし、
+            AWS S3からNetCDFファイルを取得し、
             グリッドセルごとに抽出してCSVに保存します。
           </p>
           <Tip>
             29モデルすべてをダウンロードすると時間・容量が膨大になります。
-            Notebook 1で選定した上位モデルのみに絞ることを推奨します。
+            Notebook 1で選定した上位3モデルのみに絞ることを推奨します。
           </Tip>
         </Step>
 
@@ -200,18 +286,36 @@ ee.Initialize(project='your-project-id')`}
       {/* ===== Notebook 3 ===== */}
       <Section title="Notebook 3: GSMaP Download（観測データ取得）">
         <p className="mb-4 text-sm text-muted">
-          JAXA GSMaP（Global Satellite Mapping of Precipitation）の衛星降水データを
+          JAXA GSMaP v8（Global Satellite Mapping of Precipitation）の衛星降水データを
           Earth Engine経由で取得し、GCMグリッドに合わせて整理します。
         </p>
 
-        <Step num={1} title="GSMaPデータの取得">
+        <Step num={1} title="GSMaPを使う理由">
+          <p>
+            第11期プロジェクトでは、6つの衛星降水データと1つの再解析データを比較し、
+            台風Ulysses（2020年11月）期間の地上観測との一致度で評価した結果、
+            <strong className="text-foreground">GSMaP v8 MVKが最高精度</strong>
+            を示しました。
+          </p>
+        </Step>
+
+        <Step num={2} title="GSMaPデータの取得">
           <p>
             Earth Engineの <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">JAXA/GPM_L3/GSMaP/v8/operational</code>
             から日別降水量を取得。GCMグリッドの中心点でサンプリングします。
           </p>
         </Step>
 
-        <Step num={2} title="出力">
+        <Step num={3} title="GSMaPの補正">
+          <p>
+            プロジェクトでは、GSMaPデータをさらに地上観測で補正するため、
+            <strong className="text-foreground">逆距離加重法（IDW）</strong>
+            で補正係数メッシュを作成しています。
+            これにより、地上観測と整合のとれた高精度な降水量グリッドを構築できます。
+          </p>
+        </Step>
+
+        <Step num={4} title="出力">
           <p>
             <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">his_GSMaP_id_*.csv</code>
             — 各GCMグリッドセルの日別GSMaP降水量時系列。
@@ -228,7 +332,7 @@ ee.Initialize(project='your-project-id')`}
         <p className="mb-4 text-sm text-muted">
           GSMaP観測データを用いて、GCMの降水量バイアスを補正します。
           <strong className="text-foreground">順序統計量補正法（Quantile Mapping）</strong>
-          により、GCMの分布を観測の分布に合わせます。
+          により、GCMの降水分布を観測の分布に合わせます。
         </p>
 
         <Step num={1} title="補正手法の概要">
@@ -238,6 +342,10 @@ ee.Initialize(project='your-project-id')`}
             この係数を将来シナリオのGCMデータに適用することで、
             将来予測値をバイアス補正します。
           </p>
+          <pre className="my-2 overflow-x-auto rounded-md bg-[#1e293b] p-3 text-xs text-[#e2e8f0]">
+{`補正係数(順位i) = 観測(順位i) / GCMヒストリカル(順位i)
+補正後GCM(値x) = GCM(値x) × 補正係数(xの順位)`}
+          </pre>
         </Step>
 
         <Step num={2} title="補正係数の種類">
@@ -251,7 +359,7 @@ ee.Initialize(project='your-project-id')`}
           </p>
         </Step>
 
-        <Step num={3} title="ゼロ日処理">
+        <Step num={3} title="ゼロ日処理（drizzle problem対策）">
           <p>
             観測で降水ゼロの日数をカウントし、
             GCMの降水量分布の下位を観測ゼロ日数分だけゼロにリセットします。
@@ -299,7 +407,45 @@ ee.Initialize(project='your-project-id')`}
         </Step>
       </Section>
 
-      {/* ===== ワークフロー ===== */}
+      {/* ===== 後段の解析 ===== */}
+      <Section title="後段の解析（参考: 第11期プロジェクト）">
+        <p className="mb-3 text-sm text-muted">
+          本ツールで補正した降水量データは、第11期プロジェクトで以下の解析に使用されました。
+          ツール自体には含まれませんが、参考情報として記載します。
+        </p>
+
+        <h3 className="mb-2 mt-4 font-semibold">1. 降雨確率解析</h3>
+        <p className="text-sm text-muted">
+          補正後の日別降水量から年最大値を抽出し、
+          <strong className="text-foreground">GEV（一般化極値分布）</strong>
+          でフィッティングして確率降雨を算出。SLSC値とジャックナイフ法で分布選定。
+        </p>
+
+        <h3 className="mb-2 mt-4 font-semibold">2. 水文モデル（RRI）への入力</h3>
+        <p className="text-sm text-muted">
+          補正降雨データを<strong className="text-foreground">RRI（Rainfall-Runoff-Inundation）</strong>
+          モデルに入力し、流量・浸水域を計算。Buntun Bridge等の観測点で検証済み。
+        </p>
+
+        <h3 className="mb-2 mt-4 font-semibold">3. 気候変動影響の定量化</h3>
+        <p className="text-sm text-muted">
+          現在と将来（2060-2080）の確率降雨を比較し、100年確率洪水で：
+        </p>
+        <ul className="ml-4 mt-1 list-disc space-y-1 text-sm text-muted">
+          <li>降雨量: <strong className="text-foreground">3%増加</strong></li>
+          <li>流量: <strong className="text-foreground">56%増加</strong></li>
+          <li>浸水面積: <strong className="text-foreground">65%増加</strong></li>
+        </ul>
+
+        <h3 className="mb-2 mt-4 font-semibold">4. ベイズ推定による不確実性評価</h3>
+        <p className="text-sm text-muted">
+          頻度論的な確率降雨推定は20年のデータでは不確実性が大きいため、
+          第11期プロジェクトではベイズ推定を併用し、
+          95%信用区間付きの確率降雨を算出しています。
+        </p>
+      </Section>
+
+      {/* ===== 推奨ワークフロー ===== */}
       <Section title="推奨ワークフロー">
         <ol className="ml-4 list-decimal space-y-2 text-sm text-muted">
           <li>
@@ -327,20 +473,19 @@ ee.Initialize(project='your-project-id')`}
         </ol>
       </Section>
 
-      {/* ===== 注意点 ===== */}
+      {/* ===== 実行上の注意点 ===== */}
       <Section title="実行上の注意点">
         <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
           <li>
             <strong className="text-foreground">実行環境</strong>:
-            Google Colab推奨。ローカル実行の場合は
-            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">/content/</code>
-            のパスをローカルパスに変更してください。
+            Google Colab推奨。ローカル実行も可能。いずれも冒頭の設定セルで
+            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">OUTPUT_DIR</code>
+            を設定してください。
           </li>
           <li>
             <strong className="text-foreground">GEEプロジェクトID</strong>:
-            Notebook 1, 3 のハードコード部分（
-            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">ee-kurihara-yt</code>
-            ）をご自身のIDに置き換えてください。
+            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">GEE_PROJECT</code>
+            環境変数でご自身のIDに設定。
           </li>
           <li>
             <strong className="text-foreground">S3アクセス</strong>:
@@ -356,6 +501,12 @@ ee.Initialize(project='your-project-id')`}
             <strong className="text-foreground">GSMaPの期間制限</strong>:
             Notebook 4aで使用するGSMaPは2000年3月以降のデータのみ。
             ヒストリカル補正期間もこれに合わせる必要があります。
+          </li>
+          <li>
+            <strong className="text-foreground">定常性の仮定</strong>:
+            順序統計量補正は過去の観測とGCMのヒストリカルの関係が将来も成立する
+            （定常性）と仮定しています。気候変動で降水パターンが大きく変化する場合、
+            この仮定は完全には成立しない点に注意してください。
           </li>
         </ul>
       </Section>
@@ -373,10 +524,10 @@ ee.Initialize(project='your-project-id')`}
             </thead>
             <tbody>
               {[
-                ["NASA NEX-GDDP-CMIP6", "0.25°", "GCM ヒストリカル・将来シナリオ降水量"],
+                ["NASA NEX-GDDP-CMIP6", "0.25°（約28km）", "GCM ヒストリカル・将来シナリオ降水量"],
                 ["ERA5-Land", "0.1°", "GCMモデル精度評価のリファレンス"],
-                ["JAXA GSMaP v8", "0.1°", "衛星観測降水量（補正リファレンス）"],
-                ["地上観測雨量計", "地点", "地上観測降水量（補正リファレンス、Notebook 4b）"],
+                ["JAXA GSMaP v8 MVK", "0.1°", "衛星観測降水量（補正リファレンス）"],
+                ["地上観測雨量計（PAGASA等）", "地点", "地上観測降水量（補正リファレンス、Notebook 4b）"],
               ].map(([name, res, use], i) => (
                 <tr key={name} className={i % 2 === 0 ? "bg-[#f0f4f8] dark:bg-[#1e293b]" : ""}>
                   <td className="border border-border px-3 py-2 font-medium">{name}</td>
