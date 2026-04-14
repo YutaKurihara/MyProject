@@ -35,7 +35,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <header className="sticky top-0 z-50 border-b border-border bg-card-bg/95 backdrop-blur-md">
           <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center">
               <Image
                 src={`${BP}/images/ocg-logo.png`}
                 alt="Oriental Consultants Global"
@@ -44,9 +44,6 @@ export default function RootLayout({
                 className="h-9 w-auto"
                 priority
               />
-              <span className="hidden text-sm font-semibold tracking-tight sm:inline">
-                MyProject
-              </span>
             </Link>
           </nav>
         </header>
