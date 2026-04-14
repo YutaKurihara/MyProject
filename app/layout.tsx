@@ -51,7 +51,7 @@ export default function RootLayout({
         <footer className="mt-auto border-t border-border bg-card-bg">
           <div className="mx-auto max-w-5xl px-6 py-8">
             <div className="flex flex-col items-center gap-2 text-xs text-muted sm:flex-row sm:justify-between">
-              <p>栗原 悠太 / <a href="mailto:kurihara-yt@ocglobal.jp" className="hover:underline">kurihara-yt@ocglobal.jp</a></p>
+              <p>サイト責任者: 栗原 悠太 / <a href="mailto:kurihara-yt@ocglobal.jp" className="hover:underline">kurihara-yt@ocglobal.jp</a></p>
               <p>&copy; {new Date().getFullYear()} Oriental Consultants Global Co., Ltd.</p>
             </div>
           </div>
