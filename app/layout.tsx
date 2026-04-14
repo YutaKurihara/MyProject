@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import Image from "next/image";
 import "./globals.css";
+
+const BP = process.env.__NEXT_ROUTER_BASEPATH || "";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,19 +33,21 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <header className="sticky top-0 z-50 border-b border-border bg-card-bg/80 backdrop-blur-md">
-          <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-xs font-bold text-white">
-                MP
-              </span>
-              <span className="text-sm font-semibold tracking-tight">
+        <header className="sticky top-0 z-50 border-b border-border bg-card-bg/95 backdrop-blur-md">
+          <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src={`${BP}/images/ocg-logo.png`}
+                alt="Oriental Consultants Global"
+                width={220}
+                height={36}
+                className="h-9 w-auto"
+                priority
+              />
+              <span className="hidden text-sm font-semibold tracking-tight sm:inline">
                 MyProject
               </span>
             </Link>
-            <span className="text-xs text-muted">
-              Oriental Consultants Global
-            </span>
           </nav>
         </header>
         <main className="flex-1">{children}</main>
