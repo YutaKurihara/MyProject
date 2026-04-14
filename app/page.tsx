@@ -27,9 +27,9 @@ const tools = [
     subtitle: "Climate Change Impact Assessment",
     period: "第11期（2024年）",
     description:
-      "GCMデータのダウンスケーリングと将来の土地利用変化予測を組み合わせ、気候変動下の将来洪水被害を評価するツール。",
-    status: "coming" as const,
-    href: null,
+      "NASA NEX-GDDP-CMIP6のGCMデータをGSMaPまたは地上観測データで補正する順序統計量補正手法。CMIP6の全球気候モデル精度評価からダウンロード、バイアス補正までをPythonノートブックで提供。",
+    status: "available" as const,
+    href: "/gcm-downscaling",
   },
   {
     id: "dsge-model",
