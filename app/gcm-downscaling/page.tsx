@@ -112,13 +112,6 @@ export default function GcmDownscalingPage() {
           ))}
         </div>
 
-        <Tip>
-          修正版では以下の変更を加えています:
-          <br />・ファイル名のスペル修正: <code>Downscailing</code> → <code>Downscaling</code>
-          <br />・GEEプロジェクトIDを<code>GEE_PROJECT</code>環境変数化
-          <br />・出力パスを<code>OUTPUT_DIR</code>環境変数化（Colab/ローカル両対応）
-          <br />・非推奨API <code>unary_union</code> → <code>union_all()</code>
-        </Tip>
       </Section>
 
       {/* ===== セットアップ ===== */}
