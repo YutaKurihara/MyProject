@@ -57,7 +57,7 @@ function ToolCard({ tool }: { tool: (typeof tools)[number] }) {
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
             tool.status === "available"
-              ? "bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300"
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
               : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
           }`}
         >
@@ -92,7 +92,7 @@ export default function Home() {
       <section className="bg-gradient-to-br from-hero-from to-hero-to py-20 text-white">
         <div className="mx-auto max-w-5xl px-6">
           <h1 className="mb-3 text-3xl font-bold md:text-4xl">MyProject</h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-teal-100">
+          <p className="max-w-2xl text-sm leading-relaxed text-blue-100">
             プランニング事業部のマイプロジェクトにて作成された、途上国の防災・減災を支援するオープンツール集。
             衛星画像による被害可視化から気候変動影響評価、マクロ経済モデルまで、
             様々な災害リスクの全体像を捉えるツールを開発しました。

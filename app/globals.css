@@ -3,14 +3,14 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
-  --accent: #0d9488;
-  --accent-light: #ccfbf1;
-  --accent-dark: #115e59;
+  --accent: #1e40af;
+  --accent-light: #dbeafe;
+  --accent-dark: #1e3a8a;
   --card-bg: #ffffff;
   --border: #e2e8f0;
   --muted: #64748b;
-  --hero-from: #0f766e;
-  --hero-to: #134e4a;
+  --hero-from: #1e3a8a;
+  --hero-to: #0c4a6e;
 }
 
 @theme inline {
@@ -32,13 +32,13 @@
   :root {
     --background: #0c1222;
     --foreground: #e2e8f0;
-    --accent: #2dd4bf;
-    --accent-light: #042f2e;
-    --accent-dark: #5eead4;
+    --accent: #60a5fa;
+    --accent-light: #172554;
+    --accent-dark: #93c5fd;
     --card-bg: #1e293b;
     --border: #334155;
     --muted: #94a3b8;
-    --hero-from: #134e4a;
+    --hero-from: #1e3a8a;
     --hero-to: #0c1222;
   }
 }
