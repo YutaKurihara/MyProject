@@ -20,6 +20,16 @@ export const metadata: Metadata = {
   title: "MyProject | Kurihara Yuta",
   description:
     "Open tools for disaster risk assessment and climate change impact analysis.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export default function RootLayout({
