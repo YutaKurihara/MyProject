@@ -324,33 +324,26 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
           グリッドセルごとの時系列CSVに整理します。
         </p>
 
-        <Step num={1} title="対象GCMモデルをチェックボックスで選択">
+        <Step num={1} title="対象GCMモデルを選択">
           <p>
             セル2の <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">MODEL_CFG</code>
-            には全34モデルが登録されています。セルを実行すると、各モデルのチェックボックスが
-            3列で表示されます。
+            で、使用するモデルのコメントアウトを外します。
+            デフォルトではNotebook 1で精度が高かった3モデル
+            （ACCESS-CM2、CanESM5、EC-Earth3-Veg-LR）が有効になっています。
           </p>
-          <p className="mt-2">
-            プリセットボタン:
-          </p>
-          <ul className="ml-4 mt-1 list-disc space-y-1">
-            <li>
-              <strong className="text-foreground">Default (3 models)</strong>:
-              Notebook 1で精度が高かった3モデル（ACCESS-CM2、CanESM5、EC-Earth3-Veg-LR）をチェック
-            </li>
-            <li>
-              <strong className="text-foreground">Select All</strong>: 全34モデルをチェック
-            </li>
-            <li>
-              <strong className="text-foreground">Clear All</strong>: チェックをクリア
-            </li>
-          </ul>
-          <p className="mt-2">
-            チェック後、<strong className="text-foreground">「Run」ボタン</strong>
-            を押すと次のセルに進みます。
-            Run all（すべてのセルを実行）で起動した場合でも、
-            このセルはRunボタンが押されるまで実行を一時停止します。
-          </p>
+          <pre className="my-2 overflow-x-auto rounded-md bg-[#1e293b] p-3 text-xs text-[#e2e8f0]">
+{`MODEL_CFG = {
+    # === Default: Top 3 models from 1_GCMsSelection ===
+    "ACCESS-CM2": ("r1i1p1f1", "gn"),
+    "CanESM5": ("r1i1p1f1", "gn"),
+    "EC-Earth3-Veg-LR": ("r1i1p1f1", "gr"),
+
+    # === Other available models (uncomment to use) ===
+    # "ACCESS-ESM1-5": ("r1i1p1f1", "gn"),
+    # "BCC-CSM2-MR": ("r1i1p1f1", "gn"),
+    # ...
+}`}
+          </pre>
           <Tip>
             5つ以下のモデルに絞ることを推奨します。多すぎるとダウンロード時間・容量が膨大になります。
           </Tip>
