@@ -333,28 +333,29 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
         <Step num={1} title="対象GCMモデルをチェックボックスで選択">
           <p>
             セル2の <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">MODEL_CFG</code>
-            には全34モデルが登録されています。実行すると、各モデルのチェックボックスが
+            には全34モデルが登録されています。セルを実行すると、各モデルのチェックボックスが
             3列で表示されます。
           </p>
-          <ul className="ml-4 mt-2 list-disc space-y-1">
+          <p className="mt-2">
+            プリセットボタン:
+          </p>
+          <ul className="ml-4 mt-1 list-disc space-y-1">
             <li>
-              <strong className="text-foreground">デフォルト (3モデル)</strong>:
-              Notebook 1で精度が高かった3モデル（ACCESS-CM2、CanESM5、EC-Earth3-Veg-LR）
-              がチェック済み
+              <strong className="text-foreground">Default (3 models)</strong>:
+              Notebook 1で精度が高かった3モデル（ACCESS-CM2、CanESM5、EC-Earth3-Veg-LR）をチェック
             </li>
             <li>
-              <strong className="text-foreground">すべて選択</strong>:
-              全34モデルをチェック
+              <strong className="text-foreground">Select All</strong>: 全34モデルをチェック
             </li>
             <li>
-              <strong className="text-foreground">すべて解除</strong>:
-              チェックをクリア
+              <strong className="text-foreground">Clear All</strong>: チェックをクリア
             </li>
           </ul>
           <p className="mt-2">
-            チェック後、次のセル（選択したモデルを確定）を実行すると
-            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">models</code>
-            変数に選択結果が反映されます。
+            チェック後、<strong className="text-foreground">「Run」ボタン</strong>
+            を押すと次のセルに進みます。
+            Run all（すべてのセルを実行）で起動した場合でも、
+            このセルはRunボタンが押されるまで実行を一時停止します。
           </p>
           <Tip>
             5つ以下のモデルに絞ることを推奨します。多すぎるとダウンロード時間・容量が膨大になります。
