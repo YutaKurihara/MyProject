@@ -533,6 +533,37 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
             </tbody>
           </table>
         </div>
+
+        <h3 className="mt-6 mb-2 font-semibold text-foreground">観測データの自動前処理（4bのみ）</h3>
+        <p className="text-sm text-muted">
+          4b Notebookには<strong className="text-foreground">RRI形式の降雨CSVを自動変換するプリプロセスセル</strong>
+          が含まれています。
+          手動で観測地点とGCMグリッドの対応付けを行う必要はありません。
+        </p>
+        <p className="mt-2 text-sm text-muted">入力:</p>
+        <ul className="ml-4 mt-1 list-disc space-y-1 text-sm text-muted">
+          <li>
+            <strong className="text-foreground">RRIフォーマットの雨量CSV</strong>
+            — 1行目: 観測点数、2行目: <code>lat, ...</code>、3行目: <code>lon, ...</code>、
+            4行目以降: <code>YYYY/M/D H:MM, val, val, ...</code>
+          </li>
+          <li>
+            <strong className="text-foreground">gcm_grid_shapefile.zip</strong>
+            — <code>2_DataDownload</code>で生成されたグリッドメッシュSHP
+          </li>
+        </ul>
+        <p className="mt-3 text-sm text-muted">処理内容:</p>
+        <ol className="ml-4 mt-1 list-decimal space-y-1 text-sm text-muted">
+          <li>RRI CSVを解析（観測点ごとの緯度経度 + 時間毎時系列）</li>
+          <li>時別値を日降水量に集約</li>
+          <li>各観測点を <code>gcm_grid_mesh.shp</code> に空間結合（<code>within</code>判定）</li>
+          <li>同一グリッド内の複数観測点の値を平均して <code>his_obs_id_&#123;GRID_ID&#125;.csv</code> を出力</li>
+        </ol>
+        <Tip>
+          グリッドIDは<code>2_DataDownload</code>と全く同じSHPを使用するため、
+          <strong className="text-foreground">観測データのグリッドIDとGCMデータのグリッドIDは完全に一致</strong>
+          します。ユーザーがIDのマッピングを意識する必要はありません。
+        </Tip>
       </Section>
 
       {/* ===== 推奨ワークフロー ===== */}
