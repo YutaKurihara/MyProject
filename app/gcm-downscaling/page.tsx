@@ -57,7 +57,7 @@ export default function GcmDownscalingPage() {
 
       {/* ===== 本ツールの位置づけ ===== */}
       <Section title="本ツールの位置づけ">
-        <p className="mb-3 text-sm text-muted">
+        <p className="text-sm text-muted">
           本ツールは、
           <strong className="text-foreground">
             「フィリピン・カガヤンバレー地域における気候変動と土地利用の変化を考慮した将来の洪水リスク評価のためのAIと統計の統合フレームワーク」
@@ -65,12 +65,6 @@ export default function GcmDownscalingPage() {
           （第11期マイプロジェクト）の一部として開発されたものです。
           将来の洪水リスク評価を行うためには、GCM（全球気候モデル）の降水量データを
           対象地域のスケールに合わせてダウンスケーリングし、バイアスを補正する必要があります。
-        </p>
-        <p className="text-sm text-muted">
-          プロジェクトではこの結果を用いて、100年確率洪水の流量が気候変動で
-          <strong className="text-foreground">56%増加</strong>、
-          浸水面積が<strong className="text-foreground">65%増加</strong>
-          することを示しました。
         </p>
       </Section>
 
