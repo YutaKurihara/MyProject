@@ -890,8 +890,8 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
         <h4 className="mb-2 mt-5 font-semibold text-foreground">観測雨量CSVテンプレート</h4>
         <p className="text-sm text-muted">
           Step A が読み込む入力形式です。1行目に観測点数、2行目に緯度、3行目に経度、
-          4行目以降に <code>YYYY/M/D H:MM, val, val, ...</code> という時別値を並べた
-          マルチステーション時別雨量CSVです。
+          4行目以降に <code>YYYY/MM/DD, val, val, ...</code> という日降水量を並べた
+          マルチステーション日雨量CSVです。
         </p>
         <div className="my-3">
           <a
@@ -915,8 +915,7 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
         </ul>
         <p className="mt-3 text-sm text-muted">Step Aの処理内容:</p>
         <ol className="ml-4 mt-1 list-decimal space-y-1 text-sm text-muted">
-          <li>観測雨量CSVを解析（観測点ごとの緯度経度 + 時間毎時系列）</li>
-          <li>時別値を日降水量に集約</li>
+          <li>観測雨量CSVを解析（観測点ごとの緯度経度 + 日降水量時系列）</li>
           <li>各観測点を <code>gcm_grid_mesh.shp</code> に空間結合（<code>within</code>判定）</li>
           <li>同一グリッド内の複数観測点の値を平均して <code>his_obs_id_&#123;GRID_ID&#125;.csv</code> を出力</li>
         </ol>
@@ -1005,9 +1004,9 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
             <code>.median()</code> や <code>.sum()</code> 等に変更。
           </li>
           <li>
-            <strong className="text-foreground">時別→日別の集約方法</strong> → Step Aの
-            <code>df_hourly.resample(&apos;1D&apos;).sum()</code>。降水以外（気温等）なら
-            <code>.mean()</code> に変更。
+            <strong className="text-foreground">日別値の集約方法</strong>
+            （同一グリッド内の複数観測点が同日に値を持つ場合）→ デフォルトは平均。
+            必要に応じて最大値などに変更可能。
           </li>
         </ul>
 
@@ -1112,11 +1111,10 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
             </thead>
             <tbody>
               {[
-                ["NASA NEX-GDDP-CMIP6", "0.25°（約28km）", "GCM ヒストリカル・将来シナリオ降水量"],
-                ["CMIP6 Full Collection", "〜1°", "34モデル精度評価"],
-                ["ERA5-Land", "0.1°", "気温・放射・風速のリファレンス"],
-                ["JAXA GSMaP v8 MVK", "0.1°", "降雨観測のリファレンス"],
-                ["地上観測雨量計（PAGASA等）", "地点", "地上観測降水量（Notebook 4b）"],
+                ["NASA NEX-GDDP-CMIP6", "0.25°（約28km）", "GCM精度評価（Notebook 1）/ ヒストリカル・将来データ取得（Notebook 2）"],
+                ["ERA5-Land Daily Aggregated", "0.1°（約11km）", "気温・放射・風速のリファレンス（Notebook 1）"],
+                ["JAXA GSMaP v8 Operational", "0.1°（約11km）", "衛星降水量のリファレンス（Notebook 1・3）"],
+                ["地上観測雨量計", "地点", "地上観測降水量（Notebook 4b）"],
               ].map(([name, res, use], i) => (
                 <tr key={name} className={i % 2 === 0 ? "bg-[#f0f4f8] dark:bg-[#1e293b]" : ""}>
                   <td className="border border-border px-3 py-2 font-medium">{name}</td>
