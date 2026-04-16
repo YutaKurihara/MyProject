@@ -187,14 +187,15 @@ os.environ['OUTPUT_DIR'] = '/content/drive/MyDrive/Downscaling'`}
       </Section>
 
       {/* ===== Notebook 1 ===== */}
-      <Section title="1. GCMsSelection — GCM精度評価">
+      <Section title="1. GCMsSelection.ipynb — GCM精度評価">
+        <h3 className="mb-3 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 説明</h3>
         <p className="mb-4 text-sm text-muted">
           対象地域の観測データとCMIP6の各GCMを、メッシュ単位で比較してGCMの精度評価を行います。
           <strong className="text-foreground">34モデル × 5指標 × 2評価方法 = 340の計算結果</strong>
           を算出し、総合スコアの高いモデルを後段で使用します。
         </p>
 
-        <h3 className="mb-2 mt-4 font-semibold text-foreground">評価対象の気象指標（5種類）</h3>
+        <h4 className="mb-2 mt-4 font-semibold text-foreground">評価対象の気象指標（5種類）</h4>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
             <thead>
@@ -234,13 +235,13 @@ os.environ['OUTPUT_DIR'] = '/content/drive/MyDrive/Downscaling'`}
           </table>
         </div>
 
-        <h3 className="mb-2 mt-5 font-semibold text-foreground">評価指標（2種類）</h3>
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">評価指標（2種類）</h4>
         <ul className="ml-4 list-disc space-y-1 text-sm text-muted">
           <li><strong className="text-foreground">空間相関係数 (corr)</strong>: 1に近いほど強い正の相関</li>
           <li><strong className="text-foreground">平均二乗誤差 (rmse)</strong>: 値が小さいほど正確</li>
         </ul>
 
-        <h3 className="mb-2 mt-5 font-semibold text-foreground">スコアリング方式</h3>
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">スコアリング方式</h4>
         <p className="text-sm text-muted">
           全モデルの平均より良い評価だった場合は
           <strong className="text-foreground">+1点</strong>、
@@ -248,7 +249,85 @@ os.environ['OUTPUT_DIR'] = '/content/drive/MyDrive/Downscaling'`}
           全指標の評価の合計得点を算出します。最大スコアは10点（5指標 × 2評価）。
         </p>
 
-        <h3 className="mb-2 mt-5 font-semibold text-foreground">実行手順</h3>
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">セル別処理</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr>
+                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">Cell</th>
+                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">処理内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 1 (環境設定)</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  <code>GEE_PROJECT</code> と <code>OUTPUT_DIR</code> を環境変数から読み込み
+                </td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">Cell 2 (STEP 1)</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  Earth Engine認証・初期化、ライブラリimport
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 3 (STEP 2)</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  <strong className="text-foreground">パラメータ設定</strong>（
+                  <code>region</code>=解析範囲、<code>start_date</code>/<code>end_date</code>=評価期間、<code>variables</code>=評価変数）
+                </td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">Cell 4 (STEP 3)</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  観測データ読み込み（降雨=GSMaPまたはERA5、その他=ERA5）を5変数ぶん <code>obs_dict</code> に格納
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 5 (STEP 4)</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  <code>NASA/GDDP-CMIP6</code> からGCMモデル一覧を自動取得
+                </td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">Cell 6 (STEP 6)</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  各モデル × 各変数について <code>region</code> 内をGCM投影にリサンプリングし、空間的な相関係数とRMSEを計算
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 7 (STEP 7)</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  <code>GCMs_Evaluation.csv</code> を生成してダウンロード
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">変更するとよい箇所</h4>
+        <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
+          <li>
+            <strong className="text-foreground">対象地域を変える</strong> → Cell 3 の
+            <code>region = ee.Geometry.Rectangle([lon1, lat1, lon2, lat2])</code>
+            を書き換える。AOIの目安は一辺 2.5°（10×10セル）程度。
+          </li>
+          <li>
+            <strong className="text-foreground">評価期間を変える</strong> → Cell 3 の
+            <code>start_date</code> / <code>end_date</code> を変更。20年程度の期間を推奨。
+          </li>
+          <li>
+            <strong className="text-foreground">評価変数を減らす/増やす</strong> → Cell 3 の
+            <code>variables</code> リストを編集（例: 降雨のみ評価する場合は <code>[&apos;pr&apos;]</code>）。
+          </li>
+          <li>
+            <strong className="text-foreground">降雨の観測リファレンスをGSMaPに切替</strong> →
+            Cell 4 の冒頭のGSMaPコードのコメントアウトを外し、ERA5の <code>OBS_pr</code> をコメントアウト。
+          </li>
+        </ul>
+
+        <h3 className="mb-3 mt-8 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 操作手順</h3>
 
         <Step num={1} title="解析範囲（AOI）を設定">
           <p>
@@ -318,11 +397,114 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
       </Section>
 
       {/* ===== Notebook 2 ===== */}
-      <Section title="2. DataDownload — GCMデータ取得">
+      <Section title="2. DataDownload.ipynb — GCMデータ取得">
+        <h3 className="mb-3 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 説明</h3>
         <p className="mb-4 text-sm text-muted">
-          NASA NEX-GDDP-CMIP6のGCMデータをAWS S3から取得し、
-          グリッドセルごとの時系列CSVに整理します。
+          選定モデルのヒストリカル・将来シナリオデータを NASA NEX-GDDP-CMIP6 の AWS S3 から取得し、
+          対象地域のGCMグリッドセルごとの時系列CSVにまとめます。
         </p>
+
+        <h4 className="mb-2 mt-4 font-semibold text-foreground">セル別処理</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr>
+                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">Cell</th>
+                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">処理内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 1-2</td>
+                <td className="border border-border px-3 py-2 text-muted">環境設定 + ライブラリインストール</td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">Cell 3</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  <strong className="text-foreground">GCMモデル設定</strong> (<code>MODEL_CFG</code>)
+                  — デフォルト3モデル、他31モデルはコメントアウト
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 4</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  GeoJSONアップロードで対象地域ポリゴンを読み込み
+                </td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">Cell 5</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  GCMグリッド生成（ACCESS-CM2 2000年のNCを参照して0.25°メッシュを作成）→ポリゴン内部のセルを抽出
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 6</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  <code>fetch_model_data()</code> 関数定義 — 年ごとにS3のNCを開き、各グリッドセルで降水時系列を抽出
+                </td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">Cell 7</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  ヒストリカル期間 (<code>historical_years</code>) のダウンロード → <code>his_id_*.csv</code>
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 8</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  SSPシナリオ (<code>ssp_scenarios</code>) × <code>future_years</code> のダウンロード → <code>fut_ssp*_id_*.csv</code>
+                </td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">Cell 9</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  時系列CSVを <code>future_ssp_csvs.zip</code> にまとめてダウンロード
+                </td>
+              </tr>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">Cell 10</td>
+                <td className="border border-border px-3 py-2 text-muted">
+                  グリッドメッシュSHP (<code>gcm_grid_mesh.shp</code>) とセントロイドSHPを <code>gcm_grid_shapefile.zip</code> に
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">変更するとよい箇所</h4>
+        <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
+          <li>
+            <strong className="text-foreground">対象地域を変える</strong> → Cell 4 でアップロードするGeoJSONを差し替える
+            （QGIS等で対象流域ポリゴンを作成）。グリッドは自動生成されるので他は不要。
+          </li>
+          <li>
+            <strong className="text-foreground">使うGCMを増やす/減らす</strong> → Cell 3 の
+            <code>MODEL_CFG</code> 内の該当行のコメントアウトを外す/付ける。
+          </li>
+          <li>
+            <strong className="text-foreground">ヒストリカル期間を変える</strong> → Cell 7 直前で
+            <code>historical_years = list(range(1995, 2015))</code> のように定義を編集。
+            GSMaPと合わせる場合は2000年以降を推奨。
+          </li>
+          <li>
+            <strong className="text-foreground">将来期間を変える</strong> →
+            <code>future_years = list(range(2060, 2081))</code> を編集。
+            一般的には20年程度（2041-2060、2061-2080など）を推奨。
+          </li>
+          <li>
+            <strong className="text-foreground">SSPシナリオを変える</strong> →
+            <code>ssp_scenarios = [&apos;ssp126&apos;, &apos;ssp245&apos;, &apos;ssp585&apos;]</code> を編集。
+            SSP1-2.6（低排出）、SSP2-4.5（中間）、SSP3-7.0（高）、SSP5-8.5（非常に高）から選択。
+          </li>
+          <li>
+            <strong className="text-foreground">取得変数を変える</strong>（降水以外も必要な場合）→
+            Cell 6 の <code>fetch_model_data()</code> 内で
+            <code>/pr/</code> を <code>/tas/</code> や <code>/tasmax/</code> に置き換える。
+            単位変換（ <code>ds[&quot;pr&quot;] * 86400</code>）も変更する。
+          </li>
+        </ul>
+
+        <h3 className="mb-3 mt-8 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 操作手順</h3>
 
         <Step num={1} title="対象GCMモデルを選択">
           <p>
@@ -407,7 +589,8 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
       </Section>
 
       {/* ===== Notebook 3 ===== */}
-      <Section title="3. GSMaPDownload — 観測データ取得">
+      <Section title="3. GSMaPDownload.ipynb — 衛星降水観測データ取得">
+        <h3 className="mb-3 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 説明</h3>
         <p className="mb-4 text-sm text-muted">
           JAXA GSMaP v8（Global Satellite Mapping of Precipitation）の衛星降水データを
           Earth Engine経由で取得します。
@@ -415,383 +598,7 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
           日別降水量時系列をCSV化します。
         </p>
 
-        <Step num={1} title="GCMグリッド中心点をGEE Assetにアップロード">
-          <p>
-            Notebook 2で生成されたGCMグリッド中心点のShapefile
-            （<code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">gcm_grid_centroid.shp</code>）を、
-            GEEの「Assets」→「New」→「Shape files」からアップロードします。
-          </p>
-          <ol className="ml-4 mt-1 list-decimal space-y-1">
-            <li>Assetsタブの <strong className="text-foreground">New</strong> ボタン → <strong className="text-foreground">Shape files</strong></li>
-            <li><strong className="text-foreground">Select</strong>ボタンで<code>gcm_grid_centroid</code>の全ファイル（.shp, .shx, .dbf, .prj）を選択</li>
-            <li><strong className="text-foreground">UPLOAD</strong>をクリックし、Google Cloudにアップロード</li>
-          </ol>
-        </Step>
-
-        <Step num={2} title="Asset IDをコードに反映">
-          <p>
-            Taskタブでアップロード完了を確認後、Asset名をコピーし、
-            ノートブック内の該当箇所に貼り付けます。
-          </p>
-        </Step>
-
-        <Step num={3} title="GSMaPデータ取得を実行">
-          <p>
-            Earth Engineの
-            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">JAXA/GPM_L3/GSMaP/v8/operational</code>
-            から日別降水量を取得し、各GCMグリッド中心点でサンプリングします。
-          </p>
-          <Tip>
-            GSMaPは2000年3月以降のデータのみ利用可能です。
-            ヒストリカル補正期間もこれに合わせてください。
-          </Tip>
-        </Step>
-      </Section>
-
-      {/* ===== Notebook 4 ===== */}
-      <Section title="4. Downscaling — バイアス補正">
-        <p className="mb-4 text-sm text-muted">
-          観測データ（Notebook 3のGSMaP、または地上観測）を用いて、
-          <strong className="text-foreground">順序統計量補正法（Quantile Mapping）</strong>
-          でGCMのバイアスを補正します。
-          用途に応じて <code>4a_Downscaling_GSMaP.ipynb</code> または
-          <code>4b_Downscaling_Observation.ipynb</code> を使い分けます。
-        </p>
-
-        <Step num={1} title="ファイルのアップロード">
-          <p>
-            Colab左パネルの「ファイル」タブで、新しいフォルダ
-            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">content</code> を作成し、
-            その中に Notebook 2 の出力である
-            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">future_ssp_csvs</code> フォルダの中身をコピーします。
-          </p>
-        </Step>
-
-        <Step num={2} title="補正手法の概要">
-          <p>
-            各月ごとに、GCMヒストリカルと観測の日別降水量を昇順にソートし、
-            同じ順位の値の比率を補正係数として算出します。
-          </p>
-          <pre className="my-2 overflow-x-auto rounded-md bg-[#1e293b] p-3 text-xs text-[#e2e8f0]">
-{`補正係数(順位i) = 観測(順位i) / GCMヒストリカル(順位i)
-補正後GCM(値x) = GCM(値x) × 補正係数(xの順位)`}
-          </pre>
-        </Step>
-
-        <Step num={3} title="補正係数の二重構造">
-          <ul className="ml-4 list-disc space-y-1">
-            <li><strong className="text-foreground">df_corr1</strong>: 全期間の補正係数（上位10%の極端降水に適用）</li>
-            <li><strong className="text-foreground">df_corr2</strong>: 月別の補正係数（下位90%の平常降水に適用）</li>
-          </ul>
-          <p className="mt-2">
-            極端降水と平常降水を別々の係数で補正することで、
-            極値の再現性を保ちながら日常的な降水パターンも正しく補正できます。
-          </p>
-        </Step>
-
-        <Step num={4} title="ゼロ日処理（drizzle problem対策）">
-          <p>
-            観測で降水ゼロの日数をカウントし、
-            GCMの降水量分布の下位を観測ゼロ日数分だけゼロにリセットします。
-            これにより、GCMが過剰に小雨を予測する問題（drizzle problem）を解消します。
-          </p>
-        </Step>
-
-        <Step num={5} title="実行と結果確認">
-          <p>
-            セルを順に実行すると、補正後のCSVが
-            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">OUTPUT_DIR</code> に出力されます。
-            最後のセル「上位10%描画」で補正前後の上位10%降水の比較プロットが表示されます。
-          </p>
-          <ul className="ml-4 mt-1 list-disc space-y-1">
-            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">his_id_*_corrected.csv</code> — 補正後ヒストリカル時系列</li>
-            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">fut_ssp*_id_*_corrected.csv</code> — 補正後将来シナリオ時系列</li>
-          </ul>
-        </Step>
-
-        <h3 className="mt-5 mb-2 font-semibold text-foreground">4a vs 4b の使い分け</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              <tr>
-                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">ノートブック</th>
-                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">観測ソース</th>
-                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">特徴</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">4a (GSMaP)</td>
-                <td className="border border-border px-3 py-2 text-muted">JAXA GSMaP v8</td>
-                <td className="border border-border px-3 py-2 text-muted">全球カバー、2000年以降のみ</td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">4b (Observation)</td>
-                <td className="border border-border px-3 py-2 text-muted">地上観測雨量計</td>
-                <td className="border border-border px-3 py-2 text-muted">高精度、複数SSP一括処理対応</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <h3 className="mt-6 mb-2 font-semibold text-foreground">観測データの自動前処理（4bのみ）</h3>
-        <p className="text-sm text-muted">
-          4b Notebookには<strong className="text-foreground">RRI形式の降雨CSVを自動変換するプリプロセスセル</strong>
-          が含まれています。
-          手動で観測地点とGCMグリッドの対応付けを行う必要はありません。
-        </p>
-        <p className="mt-2 text-sm text-muted">入力:</p>
-        <ul className="ml-4 mt-1 list-disc space-y-1 text-sm text-muted">
-          <li>
-            <strong className="text-foreground">RRIフォーマットの雨量CSV</strong>
-            — 1行目: 観測点数、2行目: <code>lat, ...</code>、3行目: <code>lon, ...</code>、
-            4行目以降: <code>YYYY/M/D H:MM, val, val, ...</code>
-          </li>
-          <li>
-            <strong className="text-foreground">gcm_grid_shapefile.zip</strong>
-            — <code>2_DataDownload</code>で生成されたグリッドメッシュSHP
-          </li>
-        </ul>
-        <p className="mt-3 text-sm text-muted">処理内容:</p>
-        <ol className="ml-4 mt-1 list-decimal space-y-1 text-sm text-muted">
-          <li>RRI CSVを解析（観測点ごとの緯度経度 + 時間毎時系列）</li>
-          <li>時別値を日降水量に集約</li>
-          <li>各観測点を <code>gcm_grid_mesh.shp</code> に空間結合（<code>within</code>判定）</li>
-          <li>同一グリッド内の複数観測点の値を平均して <code>his_obs_id_&#123;GRID_ID&#125;.csv</code> を出力</li>
-        </ol>
-        <Tip>
-          グリッドIDは<code>2_DataDownload</code>と全く同じSHPを使用するため、
-          <strong className="text-foreground">観測データのグリッドIDとGCMデータのグリッドIDは完全に一致</strong>
-          します。ユーザーがIDのマッピングを意識する必要はありません。
-        </Tip>
-      </Section>
-
-      {/* ===== 推奨ワークフロー ===== */}
-      <Section title="推奨ワークフロー">
-        <ol className="ml-4 list-decimal space-y-2 text-sm text-muted">
-          <li>
-            <strong className="text-foreground">Notebook 1</strong> で対象地域に適したGCMモデルを選定（3〜5モデル）
-          </li>
-          <li>
-            <strong className="text-foreground">Notebook 2</strong> で選定モデルのヒストリカル・将来データをダウンロード
-          </li>
-          <li>
-            観測データの種類に応じて：
-            <ul className="ml-4 mt-1 list-disc space-y-1">
-              <li><strong className="text-foreground">衛星観測のみ</strong>: Notebook 3 → Notebook 4a</li>
-              <li><strong className="text-foreground">地上観測あり</strong>: Notebook 4b（より高精度、推奨）</li>
-            </ul>
-          </li>
-          <li>
-            補正後データを水文モデル（RRI、HEC-HMS等）の入力として使用し、将来洪水を評価
-          </li>
-        </ol>
-      </Section>
-
-      {/* ===== コード詳細解説とカスタマイズ ===== */}
-      <Section title="コード詳細解説とカスタマイズポイント">
-        <p className="mb-4 text-sm text-muted">
-          各ノートブックがどの処理を行い、対象地域や解析期間を変更する場合に
-          どのセル・どの変数をいじれば良いかを整理します。
-        </p>
-
-        {/* 1_GCMsSelection */}
-        <h3 className="mb-2 mt-6 font-semibold text-foreground">1_GCMsSelection.ipynb</h3>
-        <p className="mb-2 text-sm text-muted">
-          対象地域でCMIP6の34モデルを空間相関係数とRMSEの2指標で評価し、
-          高精度モデルを選定するためのCSVを出力します。
-        </p>
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              <tr>
-                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">Cell</th>
-                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">処理内容</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 1 (環境設定)</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  <code>GEE_PROJECT</code> と <code>OUTPUT_DIR</code> を環境変数から読み込み
-                </td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">Cell 2 (STEP 1)</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  Earth Engine認証・初期化、ライブラリimport
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 3 (STEP 2)</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  <strong className="text-foreground">パラメータ設定</strong>（
-                  <code>region</code>=解析範囲、<code>start_date</code>/<code>end_date</code>=評価期間、<code>variables</code>=評価変数）
-                </td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">Cell 4 (STEP 3)</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  観測データ読み込み（降雨=GSMaPまたはERA5、その他=ERA5）を5変数ぶん <code>obs_dict</code> に格納
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 5 (STEP 4)</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  <code>NASA/GDDP-CMIP6</code> からGCMモデル一覧を自動取得
-                </td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">Cell 6 (STEP 6)</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  各モデル × 各変数について <code>region</code> 内をGCM投影にリサンプリングし、空間的な相関係数とRMSEを計算
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 7 (STEP 7)</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  <code>GCMs_Evaluation.csv</code> を生成してダウンロード
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p className="mt-4 mb-2 text-sm font-semibold text-foreground">変更するとよい箇所</p>
-        <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
-          <li>
-            <strong className="text-foreground">対象地域を変える</strong> → Cell 3 の
-            <code>region = ee.Geometry.Rectangle([lon1, lat1, lon2, lat2])</code>
-            を書き換える。AOIの目安は一辺 2.5°（10×10セル）程度。
-          </li>
-          <li>
-            <strong className="text-foreground">評価期間を変える</strong> → Cell 3 の
-            <code>start_date</code> / <code>end_date</code> を変更。20年程度の期間を推奨。
-          </li>
-          <li>
-            <strong className="text-foreground">評価変数を減らす/増やす</strong> → Cell 3 の
-            <code>variables</code> リストを編集（例: 降雨のみ評価する場合は <code>[&apos;pr&apos;]</code>）。
-          </li>
-          <li>
-            <strong className="text-foreground">降雨の観測リファレンスをGSMaPに切替</strong> →
-            Cell 4 の冒頭のGSMaPコードのコメントアウトを外し、ERA5の <code>OBS_pr</code> をコメントアウト。
-          </li>
-        </ul>
-
-        {/* 2_DataDownload */}
-        <h3 className="mb-2 mt-8 font-semibold text-foreground">2_DataDownload.ipynb</h3>
-        <p className="mb-2 text-sm text-muted">
-          選定モデルのヒストリカル・将来シナリオデータを AWS S3 から取得し、
-          対象地域のGCMグリッドセルごとの時系列CSVにまとめます。
-        </p>
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              <tr>
-                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">Cell</th>
-                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">処理内容</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 1-2</td>
-                <td className="border border-border px-3 py-2 text-muted">環境設定 + ライブラリインストール</td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">Cell 3</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  <strong className="text-foreground">GCMモデル設定</strong> (<code>MODEL_CFG</code>)
-                  — デフォルト3モデル、他31モデルはコメントアウト
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 4</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  GeoJSONアップロードで対象地域ポリゴンを読み込み
-                </td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">Cell 5</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  GCMグリッド生成（ACCESS-CM2 2000年のNCを参照して0.25°メッシュを作成）→ポリゴン内部のセルを抽出
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 6</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  <code>fetch_model_data()</code> 関数定義 — 年ごとにS3のNCを開き、各グリッドセルで降水時系列を抽出
-                </td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">Cell 7</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  ヒストリカル期間 (<code>historical_years</code>) のダウンロード → <code>his_id_*.csv</code>
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 8</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  SSPシナリオ (<code>ssp_scenarios</code>) × <code>future_years</code> のダウンロード → <code>fut_ssp*_id_*.csv</code>
-                </td>
-              </tr>
-              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
-                <td className="border border-border px-3 py-2 font-medium">Cell 9</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  時系列CSVを <code>future_ssp_csvs.zip</code> にまとめてダウンロード
-                </td>
-              </tr>
-              <tr>
-                <td className="border border-border px-3 py-2 font-medium">Cell 10</td>
-                <td className="border border-border px-3 py-2 text-muted">
-                  グリッドメッシュSHP (<code>gcm_grid_mesh.shp</code>) とセントロイドSHPを <code>gcm_grid_shapefile.zip</code> に
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p className="mt-4 mb-2 text-sm font-semibold text-foreground">変更するとよい箇所</p>
-        <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
-          <li>
-            <strong className="text-foreground">対象地域を変える</strong> → Cell 4 でアップロードするGeoJSONを差し替える
-            （QGIS等で対象流域ポリゴンを作成）。グリッドは自動生成されるので他は不要。
-          </li>
-          <li>
-            <strong className="text-foreground">使うGCMを増やす/減らす</strong> → Cell 3 の
-            <code>MODEL_CFG</code> 内の該当行のコメントアウトを外す/付ける。
-          </li>
-          <li>
-            <strong className="text-foreground">ヒストリカル期間を変える</strong> → Cell 7 直前で
-            <code>historical_years = list(range(1995, 2015))</code> のように定義を編集。
-            GSMaPと合わせる場合は2000年以降を推奨。
-          </li>
-          <li>
-            <strong className="text-foreground">将来期間を変える</strong> →
-            <code>future_years = list(range(2060, 2081))</code> を編集。
-            一般的には20年程度（2041-2060、2061-2080など）を推奨。
-          </li>
-          <li>
-            <strong className="text-foreground">SSPシナリオを変える</strong> →
-            <code>ssp_scenarios = [&apos;ssp126&apos;, &apos;ssp245&apos;, &apos;ssp585&apos;]</code> を編集。
-            SSP1-2.6（低排出）、SSP2-4.5（中間）、SSP3-7.0（高）、SSP5-8.5（非常に高）から選択。
-          </li>
-          <li>
-            <strong className="text-foreground">取得変数を変える</strong>（降水以外も必要な場合）→
-            Cell 6 の <code>fetch_model_data()</code> 内で
-            <code>/pr/</code> を <code>/tas/</code> や <code>/tasmax/</code> に置き換える。
-            単位変換（ <code>ds[&quot;pr&quot;] * 86400</code>）も変更する。
-          </li>
-        </ul>
-
-        {/* 3_GSMaPDownload */}
-        <h3 className="mb-2 mt-8 font-semibold text-foreground">3_GSMaPDownload.ipynb</h3>
-        <p className="mb-2 text-sm text-muted">
-          JAXA GSMaP v8 衛星降水データを Earth Engine から取得し、
-          各GCMグリッドセントロイドで日別値をサンプリングして時系列CSVに出力します。
-        </p>
-
+        <h4 className="mb-2 mt-4 font-semibold text-foreground">セル別処理</h4>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
             <thead>
@@ -846,7 +653,7 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
           </table>
         </div>
 
-        <p className="mt-4 mb-2 text-sm font-semibold text-foreground">変更するとよい箇所</p>
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">変更するとよい箇所</h4>
         <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
           <li>
             <strong className="text-foreground">対象地域（GCMグリッドセントロイド）を変える</strong> →
@@ -865,12 +672,111 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
           </li>
         </ul>
 
-        {/* 4a Downscaling */}
-        <h3 className="mb-2 mt-8 font-semibold text-foreground">4a_Downscaling_GSMaP.ipynb</h3>
-        <p className="mb-2 text-sm text-muted">
-          GSMaPを観測リファレンスとして、GCM降水量を順序統計量補正法（Quantile Mapping）でバイアス補正します。
+        <h3 className="mb-3 mt-8 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 操作手順</h3>
+
+        <Step num={1} title="GCMグリッド中心点をGEE Assetにアップロード">
+          <p>
+            Notebook 2で生成されたGCMグリッド中心点のShapefile
+            （<code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">gcm_grid_centroid.shp</code>）を、
+            GEEの「Assets」→「New」→「Shape files」からアップロードします。
+          </p>
+          <ol className="ml-4 mt-1 list-decimal space-y-1">
+            <li>Assetsタブの <strong className="text-foreground">New</strong> ボタン → <strong className="text-foreground">Shape files</strong></li>
+            <li><strong className="text-foreground">Select</strong>ボタンで<code>gcm_grid_centroid</code>の全ファイル（.shp, .shx, .dbf, .prj）を選択</li>
+            <li><strong className="text-foreground">UPLOAD</strong>をクリックし、Google Cloudにアップロード</li>
+          </ol>
+        </Step>
+
+        <Step num={2} title="Asset IDをコードに反映">
+          <p>
+            Taskタブでアップロード完了を確認後、Asset名をコピーし、
+            ノートブック内の該当箇所に貼り付けます。
+          </p>
+        </Step>
+
+        <Step num={3} title="GSMaPデータ取得を実行">
+          <p>
+            Earth Engineの
+            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">JAXA/GPM_L3/GSMaP/v8/operational</code>
+            から日別降水量を取得し、各GCMグリッド中心点でサンプリングします。
+          </p>
+          <Tip>
+            GSMaPは2000年3月以降のデータのみ利用可能です。
+            ヒストリカル補正期間もこれに合わせてください。
+          </Tip>
+        </Step>
+      </Section>
+
+      {/* ===== Notebook 4 Overview ===== */}
+      <Section title="4. Downscaling — バイアス補正（概要）">
+        <p className="mb-4 text-sm text-muted">
+          観測データ（GSMaPまたは地上観測）を用いて、
+          <strong className="text-foreground">順序統計量補正法（Quantile Mapping）</strong>
+          でGCMの降水量バイアスを補正します。
+          用途に応じて <code>4a_Downscaling_GSMaP.ipynb</code> または
+          <code>4b_Downscaling_Observation.ipynb</code> を使い分けます。
         </p>
 
+        <h4 className="mb-2 mt-4 font-semibold text-foreground">共通する補正手法の考え方</h4>
+        <p className="text-sm text-muted">
+          各月ごとに、GCMヒストリカルと観測の日別降水量を昇順にソートし、
+          同じ順位の値の比率を補正係数として算出します。
+        </p>
+        <pre className="my-2 overflow-x-auto rounded-md bg-[#1e293b] p-3 text-xs text-[#e2e8f0]">
+{`補正係数(順位i) = 観測(順位i) / GCMヒストリカル(順位i)
+補正後GCM(値x) = GCM(値x) × 補正係数(xの順位)`}
+        </pre>
+        <ul className="mt-3 ml-4 list-disc space-y-1 text-sm text-muted">
+          <li>
+            <strong className="text-foreground">df_corr1</strong>:
+            全期間の補正係数（上位10%の極端降水に適用）
+          </li>
+          <li>
+            <strong className="text-foreground">df_corr2</strong>:
+            月別の補正係数（下位90%の平常降水に適用）
+          </li>
+          <li>
+            <strong className="text-foreground">ゼロ日処理</strong>:
+            観測の降水ゼロ日数分、GCMの下位をゼロにリセットしdrizzle problemを解消
+          </li>
+        </ul>
+
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">4a vs 4b の使い分け</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead>
+              <tr>
+                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">ノートブック</th>
+                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">観測ソース</th>
+                <th className="border border-border bg-[#1e3a5f] px-3 py-2 text-left text-white">特徴</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-border px-3 py-2 font-medium">4a (GSMaP)</td>
+                <td className="border border-border px-3 py-2 text-muted">JAXA GSMaP v8</td>
+                <td className="border border-border px-3 py-2 text-muted">全球カバー、2000年以降のみ</td>
+              </tr>
+              <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
+                <td className="border border-border px-3 py-2 font-medium">4b (Observation)</td>
+                <td className="border border-border px-3 py-2 text-muted">地上観測雨量計</td>
+                <td className="border border-border px-3 py-2 text-muted">高精度、複数SSP一括処理対応</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ===== Notebook 4a ===== */}
+      <Section title="4a. Downscaling_GSMaP.ipynb — GSMaPによるバイアス補正">
+        <h3 className="mb-3 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 説明</h3>
+        <p className="mb-4 text-sm text-muted">
+          GSMaPを観測リファレンスとして、GCM降水量を順序統計量補正法（Quantile Mapping）で
+          バイアス補正します。全球カバーのため任意地域で実行可能ですが、GSMaPの観測可能期間は
+          2000年3月以降に限られます。
+        </p>
+
+        <h4 className="mb-2 mt-4 font-semibold text-foreground">セル別処理</h4>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
             <thead>
@@ -921,7 +827,7 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
           </table>
         </div>
 
-        <p className="mt-4 mb-2 text-sm font-semibold text-foreground">変更するとよい箇所</p>
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">変更するとよい箇所</h4>
         <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
           <li>
             <strong className="text-foreground">処理対象のSSPシナリオ</strong> → Cell 5 の
@@ -934,20 +840,93 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
             <code>int(0.10 * ...)</code> を <code>0.05</code>（上位5%）などに変更。
           </li>
           <li>
-            <strong className="text-foreground">観測カラム名</strong>を変える場合
-            （GSMaP → 別ソースへ差し替え）→ <code>compute_correction_factors</code> 冒頭の
+            <strong className="text-foreground">観測カラム名</strong>を変える場合 →
+            <code>compute_correction_factors</code> 冒頭の
             <code>rename(columns=&#123;&quot;GSMaP&quot;: &quot;obs&quot;&#125;)</code> を調整。
           </li>
         </ul>
 
-        {/* 4b Downscaling */}
-        <h3 className="mb-2 mt-8 font-semibold text-foreground">4b_Downscaling_Observation.ipynb</h3>
-        <p className="mb-2 text-sm text-muted">
-          地上観測データを使って4aと同じ順序統計量補正法を適用します。
+        <h3 className="mb-3 mt-8 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 操作手順</h3>
+
+        <Step num={1} title="ファイルのアップロード">
+          <p>
+            Colab左パネルの「ファイル」タブで、新しいフォルダ
+            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">content</code> を作成し、
+            その中に Notebook 2 の出力である
+            <code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">future_ssp_csvs</code>
+            と、Notebook 3 で生成した GSMaP 時系列 CSV をコピーします。
+          </p>
+        </Step>
+
+        <Step num={2} title="セルを順番に実行">
+          <p>
+            「ランタイム」→「すべてのセルを実行」で、グリッドセルごとに補正係数を計算し、
+            ヒストリカルと全SSPの補正を一括処理します。
+          </p>
+        </Step>
+
+        <Step num={3} title="結果確認とダウンロード">
+          <p>
+            最後のセルで上位10%降水の補正前後比較プロットが表示されます。
+            出力CSVは以下の命名で <code>OUTPUT_DIR</code> に保存されます:
+          </p>
+          <ul className="ml-4 mt-1 list-disc space-y-1">
+            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">his_id_*_corrected.csv</code> — 補正後ヒストリカル時系列</li>
+            <li><code className="rounded bg-[#f3f4f6] px-1 text-xs dark:bg-[#334155]">fut_ssp*_id_*_corrected.csv</code> — 補正後将来シナリオ時系列</li>
+          </ul>
+        </Step>
+      </Section>
+
+      {/* ===== Notebook 4b ===== */}
+      <Section title="4b. Downscaling_Observation.ipynb — 地上観測によるバイアス補正">
+        <h3 className="mb-3 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 説明</h3>
+        <p className="mb-4 text-sm text-muted">
+          地上観測雨量計の時別降水データを使って、4aと同じ順序統計量補正法を適用します。
           複数SSPシナリオの一括処理に対応し、Step Aで
-          <strong className="text-foreground">RRI形式CSVの自動変換</strong>もサポートします。
+          <strong className="text-foreground">観測雨量CSVテンプレートの自動変換</strong>もサポートします。
+          手動で観測地点とGCMグリッドの対応付けを行う必要はありません。
         </p>
 
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">観測雨量CSVテンプレート</h4>
+        <p className="text-sm text-muted">
+          Step A が読み込む入力形式です。1行目に観測点数、2行目に緯度、3行目に経度、
+          4行目以降に <code>YYYY/M/D H:MM, val, val, ...</code> という時別値を並べた
+          マルチステーション時別雨量CSVです。
+        </p>
+        <div className="my-3">
+          <a
+            href={`${BP}/templates/observation_rainfall_template.csv`}
+            download
+            className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            観測雨量CSVテンプレートをダウンロード
+          </a>
+        </div>
+        <p className="mt-2 text-sm text-muted">Step Aの入力:</p>
+        <ul className="ml-4 mt-1 list-disc space-y-1 text-sm text-muted">
+          <li>
+            <strong className="text-foreground">観測雨量CSVテンプレート</strong>
+            に沿った雨量CSV（上のテンプレートを埋めて使用）
+          </li>
+          <li>
+            <strong className="text-foreground">gcm_grid_shapefile.zip</strong>
+            — <code>2_DataDownload</code>で生成されたグリッドメッシュSHP
+          </li>
+        </ul>
+        <p className="mt-3 text-sm text-muted">Step Aの処理内容:</p>
+        <ol className="ml-4 mt-1 list-decimal space-y-1 text-sm text-muted">
+          <li>観測雨量CSVを解析（観測点ごとの緯度経度 + 時間毎時系列）</li>
+          <li>時別値を日降水量に集約</li>
+          <li>各観測点を <code>gcm_grid_mesh.shp</code> に空間結合（<code>within</code>判定）</li>
+          <li>同一グリッド内の複数観測点の値を平均して <code>his_obs_id_&#123;GRID_ID&#125;.csv</code> を出力</li>
+        </ol>
+        <Tip>
+          グリッドIDは<code>2_DataDownload</code>と全く同じSHPを使用するため、
+          <strong className="text-foreground">観測データのグリッドIDとGCMデータのグリッドIDは完全に一致</strong>
+          します。ユーザーがIDのマッピングを意識する必要はありません。
+        </Tip>
+
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">セル別処理</h4>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs">
             <thead>
@@ -964,7 +943,7 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
               <tr className="bg-[#f0f4f8] dark:bg-[#1e293b]">
                 <td className="border border-border px-3 py-2 font-medium">Cell 3 (Step A)</td>
                 <td className="border border-border px-3 py-2 text-muted">
-                  <strong className="text-foreground">RRI形式CSV + gcm_grid_mesh.shp → his_obs_id_*.csv 自動生成</strong>
+                  <strong className="text-foreground">観測雨量CSVテンプレート + gcm_grid_mesh.shp → his_obs_id_*.csv 自動生成</strong>
                   （空間結合により観測点とGCMグリッドを紐付け）
                 </td>
               </tr>
@@ -1008,11 +987,11 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
           </table>
         </div>
 
-        <p className="mt-4 mb-2 text-sm font-semibold text-foreground">変更するとよい箇所</p>
+        <h4 className="mb-2 mt-5 font-semibold text-foreground">変更するとよい箇所</h4>
         <ul className="ml-4 list-disc space-y-2 text-sm text-muted">
           <li>
             <strong className="text-foreground">観測データ形式</strong>
-            — RRI形式ではない場合は Step A のセルをスキップし、
+            — テンプレートに沿わない場合は Step A のセルをスキップし、
             事前に <code>his_obs_id_&#123;ID&#125;.csv</code>（列: <code>date</code>, <code>Rain</code>）を用意。
           </li>
           <li>
@@ -1031,6 +1010,61 @@ Rmse のスコア: =IF(C2<AVERAGE(C$2:C$35), 2, 0)`}
             <code>.mean()</code> に変更。
           </li>
         </ul>
+
+        <h3 className="mb-3 mt-8 rounded bg-accent px-3 py-1.5 text-sm font-bold text-white">■ 操作手順</h3>
+
+        <Step num={1} title="入力ファイルのアップロード">
+          <p>
+            Colab左パネルの「ファイル」タブで <code>content</code> フォルダを作成し、
+            以下をアップロードします:
+          </p>
+          <ul className="ml-4 mt-1 list-disc space-y-1">
+            <li>Notebook 2 の <code>future_ssp_csvs</code> の中身</li>
+            <li>上記テンプレートに沿って作成した観測雨量CSV</li>
+            <li>Notebook 2 が出力した <code>gcm_grid_shapefile.zip</code></li>
+          </ul>
+        </Step>
+
+        <Step num={2} title="Step A を実行（自動前処理）">
+          <p>
+            Step A のセルを実行すると、観測雨量CSVが自動で解析され、
+            GCMグリッドと空間結合された <code>his_obs_id_*.csv</code> が生成されます。
+          </p>
+        </Step>
+
+        <Step num={3} title="全セルを実行して補正">
+          <p>
+            残りのセルを順に実行すると、全グリッド・全SSPのバイアス補正がバッチ処理されます。
+          </p>
+        </Step>
+
+        <Step num={4} title="結果確認とダウンロード">
+          <p>
+            最後のセルで補正前後の比較プロットが表示され、補正済みファイルをZIPでダウンロードできます。
+          </p>
+        </Step>
+      </Section>
+
+      {/* ===== 推奨ワークフロー ===== */}
+      <Section title="推奨ワークフロー">
+        <ol className="ml-4 list-decimal space-y-2 text-sm text-muted">
+          <li>
+            <strong className="text-foreground">Notebook 1</strong> で対象地域に適したGCMモデルを選定（3〜5モデル）
+          </li>
+          <li>
+            <strong className="text-foreground">Notebook 2</strong> で選定モデルのヒストリカル・将来データをダウンロード
+          </li>
+          <li>
+            観測データの種類に応じて：
+            <ul className="ml-4 mt-1 list-disc space-y-1">
+              <li><strong className="text-foreground">衛星観測のみ</strong>: Notebook 3 → Notebook 4a</li>
+              <li><strong className="text-foreground">地上観測あり</strong>: Notebook 4b（より高精度、推奨）</li>
+            </ul>
+          </li>
+          <li>
+            補正後データを水文モデルの入力として使用し、将来洪水を評価
+          </li>
+        </ol>
       </Section>
 
       {/* ===== 実行上の注意点 ===== */}
