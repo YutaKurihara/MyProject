@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSGE経済モデル | MyProject</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+<header class="site-header">
+  <a href="../" class="brand">
+    <img src="../images/ocg-logo.png" alt="OCG" class="brand__logo" onerror="this.style.display='none'">
+    <span class="brand__title">MyProject</span>
+  </a>
+  <nav class="site-nav">
+    <a href="../sar-dat">SAR-DAT</a>
+    <a href="../flood-damage">Flood Damage</a>
+    <a href="../gcm-downscaling">GCM Downscaling</a>
+    <a href="./" class="active">DSGE経済モデル</a>
+  </nav>
+</header>
+
+<main class="main">
+  <h1>DSGE経済モデル — フィリピン被災インパクト推計</h1>
+  <p class="lead">
+    フィリピン17地域を対象に、自然災害が地域経済へ与えるマクロ経済的影響を
+    <strong>DIGNAD (Debt, Investment, Growth and Natural Disasters)</strong>
+    モデルで推計します。Region II (Cagayan Valley) の Lawin 2015 / Ompong 2016
+    被害を基準に、各地域の構造パラメータ <em>g</em> と <em>VA<sub>n</sub></em> を変えて
+    20年先までの GDP, 投資, 債務の応答を返します。
+  </p>
+
+  <section class="card">
+    <h2>入力</h2>
+    <form id="form">
+      <div class="field">
+        <label for="region">地域</label>
+        <select id="region" name="region">
+          <!-- populated from /regions endpoint -->
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="damage_run">被害シナリオ</label>
+        <select id="damage_run" name="damage_run">
+          <option value="Run1" selected>Run1 (2015 Lawin 相当)</option>
+          <option value="Run2">Run2 (2016 Ompong 相当, 軽め)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="g">トレンド成長率 g <span class="hint">(0.02 〜 0.10)</span></label>
+        <input type="range" id="g" name="g" min="0.02" max="0.10" step="0.001" value="0.0696">
+        <output id="g_val">0.0696</output>
+      </div>
+
+      <div class="field">
+        <label for="van">非貿易部門比率 VA<sub>n</sub> <span class="hint">(0.30 〜 0.90)</span></label>
+        <input type="range" id="van" name="VA_n" min="0.30" max="0.90" step="0.005" value="0.5045">
+        <output id="van_val">0.5045</output>
+      </div>
+
+      <div class="field actions">
+        <button type="submit" id="run_btn">シミュレーション実行</button>
+        <button type="button" id="reset_btn">リセット</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card" id="status_card" hidden>
+    <p id="status_msg"></p>
+  </section>
+
+  <section class="card" id="result_card" hidden>
+    <h2>結果</h2>
+    <div class="kpi-row">
+      <div class="kpi"><span class="kpi__label">災害年 GDP偏差</span><span class="kpi__value" id="kpi_d">—</span></div>
+      <div class="kpi"><span class="kpi__label">+1年</span><span class="kpi__value" id="kpi_d1">—</span></div>
+      <div class="kpi"><span class="kpi__label">+5年</span><span class="kpi__value" id="kpi_d5">—</span></div>
+      <div class="kpi"><span class="kpi__label">+10年</span><span class="kpi__value" id="kpi_d10">—</span></div>
+      <div class="kpi"><span class="kpi__label">計算時間</span><span class="kpi__value" id="kpi_elapsed">—</span></div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="gdp_chart"></canvas>
+    </div>
+    <details class="raw-json">
+      <summary>レスポンス全文 (JSON)</summary>
+      <pre id="raw_json"></pre>
+    </details>
+  </section>
+
+  <section class="card meta">
+    <h2>モデル概要</h2>
+    <ul>
+      <li>Marto, Papageorgiou & Klyuev (2018), <em>J. Development Economics</em> Vol.135 を基盤とした IMF RES の DSGE モデル</li>
+      <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> をクラウド上で実行</li>
+      <li>地域別 <em>g</em>, VA<sub>n</sub> は PSA 2018PSNA 名目GRDPから算出</li>
+      <li>被害ショックは Region II の 2015/2016 推計値を全地域に同一適用 (構造応答比較)</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>© 2026 Yuta Kurihara · National Graduate Institute for Policy Studies (GRIPS) / Oriental Consultants Global</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
