@@ -38,8 +38,8 @@ const tools = [
     period: "第13期（2025年）",
     description:
       "IMFのDIGNADモデルをベースに、洪水被害がGDP・税収・家計に与える長期的な経済影響をシミュレーションする。",
-    status: "coming" as const,
-    href: null,
+    status: "available" as const,
+    href: "/dsge",
   },
 ];
 
