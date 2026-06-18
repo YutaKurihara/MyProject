@@ -105,24 +105,40 @@ const FISCAL: ParamDef[] = [
   { key: "upsilon",    label: "Debt mix: ext-comm vs dom",  sublabel: "υ",    default: 0.50, min: 0, max: 1.0, step: 0.05, unit: "ratio" },
 ];
 
-const DISASTER: ParamDef[] = [
-  { key: "damage_yx",              label: "Damage to T-output",         sublabel: "shock_yx",    default: 0.0322, min: 0, max: 0.50, step: 0.005, unit: "pct" },
-  { key: "damage_yn",              label: "Damage to NT-output",        sublabel: "shock_yn",    default: 0.0362, min: 0, max: 0.50, step: 0.005, unit: "pct" },
-  { key: "damage_public_capital",  label: "Public capital damage",      sublabel: "shock_zi",    default: 0.0049, min: 0, max: 0.50, step: 0.001, unit: "usd_pct",
-    tooltip: "% of GDP. Editable as USD amount too." },
-  { key: "damage_private_capital", label: "Private capital damage",     sublabel: "shock_k",     default: 0.0098, min: 0, max: 0.50, step: 0.001, unit: "usd_pct",
-    tooltip: "% of GDP. Editable as USD amount too." },
-  { key: "damage_share_tradable",  label: "Share to T-capital",         sublabel: "share_T",     default: 0.4665, min: 0, max: 1.0,  step: 0.01,  unit: "ratio" },
-  { key: "damage_recon_efficiency",label: "Reconstruction eff. loss",   sublabel: "shock_s",     default: 0,      min: 0, max: 0.80, step: 0.05,  unit: "pct" },
-  { key: "damage_risk_premium",    label: "Risk-premium increase",      sublabel: "shock_rextg", default: 0,      min: 0, max: 0.10, step: 0.005, unit: "pct" },
+// 災害シナリオ — ユーザーが USD 金額や % で直接入力
+// チャネル別に 3 カードに分割: ① 公共インフラ被害 ② 家計/民間資産被害 ③ 生産性・その他係数
+
+const DAMAGE_PUBLIC: ParamDef[] = [
+  { key: "damage_public_capital", label: "公共インフラ被害額",      sublabel: "shock_zi",  default: 0.005, min: 0, max: 0.50, step: 0.001, unit: "usd_pct",
+    tooltip: "災害による公共インフラ(道路・橋・建物等)の破壊額。% of GDP / USD 金額の両方で編集可。" },
+  { key: "damage_recon_efficiency", label: "公共投資効率の低下",   sublabel: "shock_s",   default: 0,     min: 0, max: 0.80, step: 0.01,  unit: "pct",
+    tooltip: "災害後の再建期間中、 政府の投資が実際に capital に化ける割合の低下分(%)。容量制約・管理逼迫を反映。" },
+  { key: "damage_risk_premium",   label: "対外債務リスクプレミアム上昇", sublabel: "shock_rextg", default: 0, min: 0, max: 0.10, step: 0.001, unit: "pct",
+    tooltip: "災害後の信用格下げによる対外商業債のリスクプレミアム上昇(percentage point)。" },
+];
+
+const DAMAGE_PRIVATE: ParamDef[] = [
+  { key: "damage_private_capital", label: "家計・民間資産被害額", sublabel: "shock_k",  default: 0.010, min: 0, max: 0.50, step: 0.001, unit: "usd_pct",
+    tooltip: "災害による家計の住宅・耐久財・企業の生産設備の破壊額。% of GDP / USD 金額の両方で編集可。" },
+  { key: "damage_share_tradable",  label: "うち貿易財部門への配分", sublabel: "share_T",  default: 0.50,  min: 0, max: 1.0,  step: 0.01,  unit: "ratio",
+    tooltip: "民間資産被害のうち、 貿易財(農業・製造業など)部門に帰属する割合。残りは非貿易財(サービス・建設業など)。" },
+];
+
+const DAMAGE_TFP: ParamDef[] = [
+  { key: "damage_yx", label: "貿易財部門 TFP 低下",      sublabel: "shock_yx", default: 0.03, min: 0, max: 0.50, step: 0.001, unit: "pct",
+    tooltip: "災害による貿易財部門の総要素生産性(TFP)の直接低下(行動応答を除く、純粋技術的損失%)。" },
+  { key: "damage_yn", label: "非貿易財部門 TFP 低下",    sublabel: "shock_yn", default: 0.04, min: 0, max: 0.50, step: 0.001, unit: "pct",
+    tooltip: "災害による非貿易財部門のTFP直接低下%。インフラ寸断・物流停止等の直接影響。" },
 ];
 
 const ALL_GROUPS: { id: string; title: string; subtitle: string; params: ParamDef[] }[] = [
-  { id: "infra",    title: "Public Infrastructure", subtitle: "Standard + Adaptation capital",        params: PUB_INFRA },
-  { id: "economy",  title: "Real Economy",          subtitle: "Growth, sectors, household structure", params: REAL_ECON },
-  { id: "debt",     title: "Debt & Revenue",        subtitle: "Public/private debt, interest rates",  params: DEBT_REV },
-  { id: "fiscal",   title: "Fiscal Instruments",    subtitle: "Taxes, fiscal adjustment weights",     params: FISCAL },
-  { id: "disaster", title: "Disaster Scenario",     subtitle: "Damage shock magnitudes",              params: DISASTER },
+  { id: "infra",       title: "公共インフラ・パラメータ",   subtitle: "標準 + 適応資本", params: PUB_INFRA },
+  { id: "economy",     title: "実体経済パラメータ",         subtitle: "成長率・部門構成・家計", params: REAL_ECON },
+  { id: "debt",        title: "債務・収入パラメータ",       subtitle: "公的/民間債務・金利", params: DEBT_REV },
+  { id: "fiscal",      title: "財政手段パラメータ",         subtitle: "税率・財政調整ウェイト", params: FISCAL },
+  { id: "dmg_public",  title: "災害被害 ① 公共インフラ",    subtitle: "公共資本破壊・再建非効率・リスクプレミアム", params: DAMAGE_PUBLIC },
+  { id: "dmg_private", title: "災害被害 ② 家計・民間資産",  subtitle: "民間資本破壊・貿易/非貿易財配分", params: DAMAGE_PRIVATE },
+  { id: "dmg_tfp",     title: "災害被害 ③ 生産性・その他",  subtitle: "TFP直接低下(貿易/非貿易財別)", params: DAMAGE_TFP },
 ];
 
 /* ============================================================================
@@ -268,7 +284,6 @@ type ApiResult = {
 
 export default function DsgePage() {
   const [region, setRegion] = useState("RegionII");
-  const [damageRun, setDamageRun] = useState<"Run1" | "Run2">("Run1");
   const [gdpUsd, setGdpUsd] = useState(100_000_000_000); // 100B USD default
   const [params, setParams] = useState<Record<string, number>>(defaultParams);
   const setParam = (k: string, v: number) => setParams((p) => ({ ...p, [k]: v }));
@@ -281,13 +296,12 @@ export default function DsgePage() {
       .catch(() => {});
   }, []);
 
+  // 地域変更時に g, VA_n のみ既定値で更新 (Run1テンプレ基準)
   useEffect(() => {
     const info = regions[region];
     if (!info) return;
-    const g  = damageRun === "Run1" ? info.g_run1   : info.g_run2;
-    const vn = damageRun === "Run1" ? info.van_run1 : info.van_run2;
-    setParams((p) => ({ ...p, g, VA_n: vn }));
-  }, [region, damageRun, regions]);
+    setParams((p) => ({ ...p, g: info.g_run1, VA_n: info.van_run1 }));
+  }, [region, regions]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -300,7 +314,9 @@ export default function DsgePage() {
       const resp = await fetch(`${API_BASE}/simulate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region, damage_run: damageRun, params }),
+        // damage_run は backend が template ファイルを選ぶための内部値
+        // (Disaster 値はすべて params で上書きされるため Run1/Run2 の違いは消える)
+        body: JSON.stringify({ region, damage_run: "Run1", params }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
@@ -312,7 +328,8 @@ export default function DsgePage() {
     }
   }
 
-  const damageIdx = damageRun === "Run2" ? 2 : 1;
+  // Run1 テンプレ固定: 基準年 2014、 災害年 2015 (index = 1)
+  const damageIdx = 1;
   const kpis = useMemo(() => {
     if (!result) return null;
     const at = (off: number) => result.gdp_pct_dev[damageIdx + off] ?? null;
@@ -424,25 +441,19 @@ export default function DsgePage() {
           シナリオ設定
         </h2>
         <form onSubmit={submit}>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-muted">地域</span>
+              <span className="mb-1 block text-xs font-medium text-muted">
+                対象地域 <span className="text-[10px] opacity-60">(g, VA<sub>n</sub> の既定値を地域から自動設定)</span>
+              </span>
               <select value={region} onChange={(e) => setRegion(e.target.value)}
                 className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
                 {Object.entries(regions).map(([k, v]) => (<option key={k} value={k}>{v.label}</option>))}
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-muted">被害シナリオ</span>
-              <select value={damageRun} onChange={(e) => setDamageRun(e.target.value as "Run1"|"Run2")}
-                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
-                <option value="Run1">Run1 (Lawin 2015 相当)</option>
-                <option value="Run2">Run2 (Ompong 2016 相当, 軽め)</option>
-              </select>
-            </label>
-            <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">
-                ベースライン GDP (USD) <span className="text-[10px] opacity-60">— %偏差を金額換算する基準</span>
+                ベースライン GDP (USD) <span className="text-[10px] opacity-60">— 災害被害額や結果を金額換算する基準</span>
               </span>
               <input type="number" value={gdpUsd} min={1e6} step={1e9}
                 onChange={(e) => setGdpUsd(parseFloat(e.target.value) || 0)}
@@ -451,6 +462,11 @@ export default function DsgePage() {
               <div className="mt-1 text-right text-[11px] font-mono text-emerald-700">{fmtUSD(gdpUsd)}</div>
             </label>
           </div>
+          <p className="mt-3 text-[11px] text-muted">
+            ※ 災害被害は下記「災害被害」カード (公共インフラ・家計資産・生産性) で <strong>USD 金額または %</strong>
+            で直接入力してください。 地域選択は既定パラメータの調整のみで、被害は事前定義シナリオ(Run1/Run2)では
+            なく完全にユーザー入力で決まります。
+          </p>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             {ALL_GROUPS.map((g) => (
@@ -548,19 +564,3 @@ export default function DsgePage() {
         <h2 className="mb-3 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
           技術ノート
         </h2>
-        <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed text-muted">
-          <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> (Linux ソースビルド), Cloud Run 上で実行。1リクエスト ~60秒。</li>
-          <li>地域別 <code>g</code>, <code>VA<sub>n</sub></code> は PSA 2018PSNA 名目GRDPから算出 (フィリピン 17 地域)。</li>
-          <li>制約: <code>g ≥ 0.10</code> で Dynare Jacobian が爆発するため自動的に 0.10 にキャップ。</li>
-          <li>USD 換算は「Real GDP 偏差 (%) × ベースライン GDP (USD)」の単純線形換算で、為替変動・物価変動は考慮していません。</li>
-          <li>パラメータ詳細・出典: <a href="https://www.elibrary.imf.org/view/journals/005/2023/003/article-A001-en.xml" target="_blank" rel="noopener noreferrer" className="text-accent underline">IMF Technical Note 2023/03</a> 参照。</li>
-        </ul>
-      </section>
-
-      <footer className="mt-6 text-center text-[11px] text-muted">
-        DIGNAD model: Marto, Papageorgiou &amp; Klyuev (2018), <em>Journal of Development Economics</em> Vol.135 ·
-        IMF DIGNAD Toolkit (Aligishiev, Ruane &amp; Sultanov 2023)
-      </footer>
-    </div>
-  );
-}
