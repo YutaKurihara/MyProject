@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 
 const API_BASE = "https://dignad-api-wp3vw2gjra-an.a.run.app";
 
+/* ============================================================================
+   Region defaults
+   ========================================================================= */
+
 type RegionInfo = {
   label: string;
-  g_run1: number;
-  van_run1: number;
-  g_run2: number;
-  van_run2: number;
+  g_run1: number; van_run1: number;
+  g_run2: number; van_run2: number;
 };
 
 const REGIONS_FALLBACK: Record<string, RegionInfo> = {
@@ -32,132 +34,273 @@ const REGIONS_FALLBACK: Record<string, RegionInfo> = {
   BARMM:      { label: "BARMM",                        g_run1: 0.1000, van_run1: 0.3682, g_run2: 0.0928, van_run2: 0.3974 },
 };
 
-type ApiResult = {
-  elapsed_seconds: number;
-  years: number[];
-  gdp_pct_dev: (number | null)[];
-  params: { region: string; g: number; VA_n: number; damage_run: string };
+/* ============================================================================
+   Parameter metadata
+   ========================================================================= */
+
+type ParamDef = {
+  key: string;
+  label: string;
+  sublabel?: string;
+  tooltip?: string;
+  unit?: "ratio" | "pct" | "rate" | "scaling" | "usd_pct";
+  default: number;
+  min?: number;
+  max?: number;
+  step?: number;
 };
 
-function GdpChart({ years, values }: { years: number[]; values: (number | null)[] }) {
+const PUB_INFRA: ParamDef[] = [
+  { key: "iziy",     label: "Public infrastructure inv./GDP", sublabel: "iziy",    default: 0.04,  min: 0, max: 0.20, step: 0.001, unit: "ratio",
+    tooltip: "Steady-state share of public investment in standard infrastructure (% of GDP). DIGNAD default: 6% for typical SSA-LIC." },
+  { key: "izay",     label: "Public adaptation inv./GDP",     sublabel: "izay",    default: 0.00,  min: 0, max: 0.10, step: 0.001, unit: "ratio",
+    tooltip: "Investment in climate-resilient infrastructure. Often near 0 in LICs." },
+  { key: "delta_zi", label: "Depreciation (std infra)",       sublabel: "δ_zi",    default: 0.075, min: 0.01, max: 0.20, step: 0.005, unit: "rate" },
+  { key: "delta_za", label: "Depreciation (adaptation)",      sublabel: "δ_za",    default: 0.03,  min: 0.005, max: 0.15, step: 0.005, unit: "rate" },
+  { key: "R_zio",    label: "Return on std infra",            sublabel: "R_zi,o",  default: 0.25,  min: 0.05, max: 0.60, step: 0.01, unit: "rate" },
+  { key: "R_zao",    label: "Return on adaptation",           sublabel: "R_za,o",  default: 0.30,  min: 0.05, max: 0.90, step: 0.01, unit: "rate" },
+  { key: "s_o",      label: "Public investment efficiency",   sublabel: "s_o",     default: 0.50,  min: 0.10, max: 1.00, step: 0.05, unit: "ratio" },
+  { key: "a_za",     label: "Cost ratio adapt vs std",        sublabel: "a_za",    default: 0.25,  min: 0,    max: 1.00, step: 0.05, unit: "ratio" },
+  { key: "ppi_nd_n", label: "Adaptation mitigation scaling",  sublabel: "π_j",     default: 25,    min: 0,    max: 100,  step: 1,    unit: "scaling" },
+  { key: "fo",       label: "User fees (% recurrent)",        sublabel: "μ",       default: 0.05,  min: 0,    max: 0.60, step: 0.01, unit: "ratio" },
+];
+
+const REAL_ECON: ParamDef[] = [
+  { key: "g",       label: "Trend per-capita growth",  sublabel: "g",      default: 0.0696, min: 0.01, max: 0.10, step: 0.001, unit: "rate",
+    tooltip: "Steady-state per-capita real growth rate. Hard-capped at 10%." },
+  { key: "oilro",   label: "Natural resource rev/GDP", sublabel: "N_o",    default: 0.00,   min: 0, max: 0.50, step: 0.01, unit: "ratio" },
+  { key: "imp2gdp", label: "Imports/GDP",              sublabel: "I_o",    default: 0.2177, min: 0.05, max: 0.80, step: 0.01, unit: "ratio" },
+  { key: "a_ratio", label: "NS/S labor ratio",         sublabel: "α",      default: 0.60,   min: 0, max: 5.0, step: 0.05, unit: "ratio",
+    tooltip: "Liquidity-constrained (NS) vs savers (S). Default: 60% are NS (Buffie 2012)." },
+  { key: "VA_n",    label: "Value added in NT sector", sublabel: "VA_n",   default: 0.5045, min: 0.20, max: 0.90, step: 0.01, unit: "ratio" },
+  { key: "alpha_x", label: "Capital share, T sector",  sublabel: "α_x",    default: 0.40,   min: 0.10, max: 0.80, step: 0.05, unit: "ratio" },
+  { key: "alpha_n", label: "Capital share, NT sector", sublabel: "α_n",    default: 0.55,   min: 0.10, max: 0.80, step: 0.05, unit: "ratio" },
+  { key: "alpha_k", label: "NT inputs in K_priv",      sublabel: "α_k",    default: 0.50,   min: 0.10, max: 0.90, step: 0.05, unit: "ratio" },
+  { key: "alpha_z", label: "NT inputs in K_pub",       sublabel: "α_z",    default: 0.50,   min: 0.10, max: 0.90, step: 0.05, unit: "ratio" },
+  { key: "delta_x", label: "Depreciation, T sector",   sublabel: "δ_x",    default: 0.05,   min: 0.01, max: 0.20, step: 0.005, unit: "rate" },
+  { key: "delta_n", label: "Depreciation, NT sector",  sublabel: "δ_n",    default: 0.05,   min: 0.01, max: 0.20, step: 0.005, unit: "rate" },
+];
+
+const DEBT_REV: ParamDef[] = [
+  { key: "share_b",     label: "Domestic public debt/GDP",   sublabel: "b_o",     default: 0.414, min: 0, max: 1.5, step: 0.01, unit: "ratio" },
+  { key: "share_d",     label: "Concessional debt/GDP",      sublabel: "d_o",     default: 0.001, min: 0, max: 1.0, step: 0.005, unit: "ratio" },
+  { key: "share_dc",    label: "Ext. commercial debt/GDP",   sublabel: "d_c,o",   default: 0.196, min: 0, max: 1.0, step: 0.01, unit: "ratio" },
+  { key: "share_bstar", label: "Private external debt/GDP",  sublabel: "b*_o",    default: 0.113, min: 0, max: 1.0, step: 0.01, unit: "ratio" },
+  { key: "Savo",        label: "Contingency fund/GDP",       sublabel: "Sav_o",   default: 0,     min: 0, max: 0.50, step: 0.005, unit: "ratio",
+    tooltip: "External natural-disaster savings fund." },
+  { key: "share_grants",label: "Grants/GDP",                 sublabel: "G_o",     default: 0.078, min: 0, max: 0.50, step: 0.005, unit: "ratio" },
+  { key: "share_remit", label: "Remittances/GDP",            sublabel: "R_o",     default: 0.089, min: 0, max: 0.50, step: 0.005, unit: "ratio" },
+  { key: "ro",          label: "Real rate, domestic",        sublabel: "r_o",     default: 0.027, min: 0, max: 0.20, step: 0.005, unit: "rate" },
+  { key: "r_dco",       label: "Real rate, ext.commercial",  sublabel: "r_dc,o",  default: 0.022, min: 0, max: 0.20, step: 0.005, unit: "rate" },
+  { key: "rstar",       label: "Risk-free foreign rate",     sublabel: "r^f",     default: 0.04,  min: 0, max: 0.15, step: 0.005, unit: "rate" },
+];
+
+const FISCAL: ParamDef[] = [
+  { key: "ho",         label: "Consumption tax (VAT)",      sublabel: "h",    default: 0.12, min: 0, max: 0.40, step: 0.005, unit: "rate" },
+  { key: "hlo",        label: "Labor income tax",           sublabel: "h_l",  default: 0.25, min: 0, max: 0.60, step: 0.005, unit: "rate" },
+  { key: "lambda",     label: "Fiscal adj — Transfers",     sublabel: "λ",    default: 0.20, min: 0, max: 1.0, step: 0.05, unit: "ratio",
+    tooltip: "λ + λ_h + λ_hl = 1. How fiscal gap is split between transfers, VAT, labor tax." },
+  { key: "lambda_h",   label: "Fiscal adj — VAT",           sublabel: "λ_h",  default: 0.40, min: 0, max: 1.0, step: 0.05, unit: "ratio" },
+  { key: "lambda_hl",  label: "Fiscal adj — Labor tax",     sublabel: "λ_hl", default: 0.40, min: 0, max: 1.0, step: 0.05, unit: "ratio" },
+  { key: "upsilon",    label: "Debt mix: ext-comm vs dom",  sublabel: "υ",    default: 0.50, min: 0, max: 1.0, step: 0.05, unit: "ratio" },
+];
+
+const DISASTER: ParamDef[] = [
+  { key: "damage_yx",              label: "Damage to T-output",         sublabel: "shock_yx",    default: 0.0322, min: 0, max: 0.50, step: 0.005, unit: "pct" },
+  { key: "damage_yn",              label: "Damage to NT-output",        sublabel: "shock_yn",    default: 0.0362, min: 0, max: 0.50, step: 0.005, unit: "pct" },
+  { key: "damage_public_capital",  label: "Public capital damage",      sublabel: "shock_zi",    default: 0.0049, min: 0, max: 0.50, step: 0.001, unit: "usd_pct",
+    tooltip: "% of GDP. Editable as USD amount too." },
+  { key: "damage_private_capital", label: "Private capital damage",     sublabel: "shock_k",     default: 0.0098, min: 0, max: 0.50, step: 0.001, unit: "usd_pct",
+    tooltip: "% of GDP. Editable as USD amount too." },
+  { key: "damage_share_tradable",  label: "Share to T-capital",         sublabel: "share_T",     default: 0.4665, min: 0, max: 1.0,  step: 0.01,  unit: "ratio" },
+  { key: "damage_recon_efficiency",label: "Reconstruction eff. loss",   sublabel: "shock_s",     default: 0,      min: 0, max: 0.80, step: 0.05,  unit: "pct" },
+  { key: "damage_risk_premium",    label: "Risk-premium increase",      sublabel: "shock_rextg", default: 0,      min: 0, max: 0.10, step: 0.005, unit: "pct" },
+];
+
+const ALL_GROUPS: { id: string; title: string; subtitle: string; params: ParamDef[] }[] = [
+  { id: "infra",    title: "Public Infrastructure", subtitle: "Standard + Adaptation capital",        params: PUB_INFRA },
+  { id: "economy",  title: "Real Economy",          subtitle: "Growth, sectors, household structure", params: REAL_ECON },
+  { id: "debt",     title: "Debt & Revenue",        subtitle: "Public/private debt, interest rates",  params: DEBT_REV },
+  { id: "fiscal",   title: "Fiscal Instruments",    subtitle: "Taxes, fiscal adjustment weights",     params: FISCAL },
+  { id: "disaster", title: "Disaster Scenario",     subtitle: "Damage shock magnitudes",              params: DISASTER },
+];
+
+/* ============================================================================
+   Helpers
+   ========================================================================= */
+
+function defaultParams(): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const g of ALL_GROUPS) for (const p of g.params) out[p.key] = p.default;
+  return out;
+}
+
+function fmtUSD(amount: number) {
+  if (!isFinite(amount)) return "—";
+  const abs = Math.abs(amount);
+  if (abs >= 1e12) return `${(amount / 1e12).toFixed(2)} T USD`;
+  if (abs >= 1e9)  return `${(amount / 1e9).toFixed(2)} B USD`;
+  if (abs >= 1e6)  return `${(amount / 1e6).toFixed(2)} M USD`;
+  if (abs >= 1e3)  return `${(amount / 1e3).toFixed(2)} K USD`;
+  return `${amount.toFixed(0)} USD`;
+}
+
+function fmtPct(v: number | null | undefined, digits = 2) {
+  if (v == null || !isFinite(v)) return "—";
+  return `${v >= 0 ? "+" : ""}${v.toFixed(digits)}%`;
+}
+
+/* ============================================================================
+   Chart component
+   ========================================================================= */
+
+function LineChart({ years, values, color, ylabel }:
+  { years: number[]; values: (number|null)[]; color: string; ylabel: string }) {
   const pts = years.map((y, i) => ({ y, v: values[i] ?? 0 }));
   if (pts.length === 0) return null;
-
-  const w = 720, h = 280;
-  const padL = 56, padR = 16, padT = 20, padB = 36;
-  const innerW = w - padL - padR;
-  const innerH = h - padT - padB;
-
+  const w = 720, h = 240, padL = 56, padR = 14, padT = 16, padB = 32;
+  const innerW = w - padL - padR, innerH = h - padT - padB;
   const vals = pts.map(p => p.v);
-  const minV = Math.min(...vals, 0);
-  const maxV = Math.max(...vals, 0);
-  const yrange = maxV - minV || 1;
-  const yMin = minV - yrange * 0.1;
-  const yMax = maxV + yrange * 0.1;
-
+  const minV = Math.min(...vals, 0), maxV = Math.max(...vals, 0);
+  const r = (maxV - minV) || 1;
+  const yMin = minV - r * 0.1, yMax = maxV + r * 0.1;
   const xFor = (i: number) => padL + (i / (pts.length - 1)) * innerW;
   const yFor = (v: number) => padT + ((yMax - v) / (yMax - yMin)) * innerH;
-
   const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${xFor(i).toFixed(1)},${yFor(p.v).toFixed(1)}`).join(" ");
   const areaPath = `${path} L${xFor(pts.length-1).toFixed(1)},${yFor(0).toFixed(1)} L${xFor(0).toFixed(1)},${yFor(0).toFixed(1)} Z`;
-
-  // Y-axis ticks
   const yTicks = 5;
   const ticks = Array.from({ length: yTicks }, (_, i) => yMin + ((yMax - yMin) * i) / (yTicks - 1));
-
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" role="img" aria-label="Real GDP percent deviation">
-      {/* zero line */}
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-auto w-full">
+      <text x={padL} y={padT - 4} fontSize="11" fill="#64748b">{ylabel}</text>
       <line x1={padL} y1={yFor(0)} x2={w - padR} y2={yFor(0)} stroke="#94a3b8" strokeDasharray="3 3" />
-      {/* y ticks */}
       {ticks.map((t, i) => (
         <g key={i}>
           <line x1={padL} y1={yFor(t)} x2={w - padR} y2={yFor(t)} stroke="#e2e8f0" />
-          <text x={padL - 6} y={yFor(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">
-            {t.toFixed(2)}%
-          </text>
+          <text x={padL - 6} y={yFor(t) + 4} textAnchor="end" fontSize="10" fill="#64748b">{t.toFixed(2)}</text>
         </g>
       ))}
-      {/* x labels */}
-      {pts.map((p, i) => (
-        i % 2 === 0 && (
-          <text key={p.y} x={xFor(i)} y={h - padB + 18} textAnchor="middle" fontSize="11" fill="#64748b">
-            {p.y}
-          </text>
-        )
+      {pts.map((p, i) => i % 2 === 0 && (
+        <text key={p.y} x={xFor(i)} y={h - padB + 14} textAnchor="middle" fontSize="10" fill="#64748b">{p.y}</text>
       ))}
-      {/* area */}
-      <path d={areaPath} fill="rgba(29, 78, 216, 0.12)" />
-      {/* line */}
-      <path d={path} fill="none" stroke="#1d4ed8" strokeWidth="2" />
-      {/* points */}
-      {pts.map((p, i) => (
-        <circle key={i} cx={xFor(i)} cy={yFor(p.v)} r="3" fill="#1d4ed8" />
-      ))}
-      {/* axis */}
+      <path d={areaPath} fill={`${color}22`} />
+      <path d={path} fill="none" stroke={color} strokeWidth="2" />
+      {pts.map((p, i) => <circle key={i} cx={xFor(i)} cy={yFor(p.v)} r="2.5" fill={color} />)}
       <line x1={padL} y1={padT} x2={padL} y2={h - padB} stroke="#475569" />
       <line x1={padL} y1={h - padB} x2={w - padR} y2={h - padB} stroke="#475569" />
     </svg>
   );
 }
 
+/* ============================================================================
+   Parameter input field
+   ========================================================================= */
+
+function NumField({ def, value, onChange, gdpUsd }:
+  { def: ParamDef; value: number; onChange: (v: number) => void; gdpUsd: number }) {
+  const [showTip, setShowTip] = useState(false);
+  const usdValue = def.unit === "usd_pct" ? value * gdpUsd : null;
+  const onUsdChange = (usd: number) => { if (gdpUsd) onChange(usd / gdpUsd); };
+
+  return (
+    <div className="relative rounded-md border border-border bg-slate-50 px-3 py-2 dark:bg-slate-900">
+      <div className="mb-1 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="truncate text-[11px] font-medium text-slate-700 dark:text-slate-200">{def.label}</div>
+          {def.sublabel && <div className="text-[9px] font-mono text-slate-400">{def.sublabel}</div>}
+        </div>
+        {def.tooltip && (
+          <button
+            type="button"
+            onMouseEnter={() => setShowTip(true)}
+            onMouseLeave={() => setShowTip(false)}
+            onClick={() => setShowTip(s => !s)}
+            className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-slate-300 text-[9px] font-bold text-white hover:bg-slate-500 dark:bg-slate-600"
+            aria-label="info"
+          >i</button>
+        )}
+      </div>
+      {showTip && def.tooltip && (
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-white p-2 text-[10px] leading-snug text-slate-700 shadow-lg dark:bg-slate-800 dark:text-slate-100">
+          {def.tooltip}
+        </div>
+      )}
+      <input
+        type="number"
+        value={Number.isFinite(value) ? value : 0}
+        min={def.min} max={def.max} step={def.step}
+        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        className="w-full rounded border border-border bg-white px-2 py-1 text-right text-xs font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-100"
+      />
+      {usdValue !== null && (
+        <div className="mt-1 flex items-center gap-1">
+          <span className="text-[9px] text-slate-400">USD:</span>
+          <input
+            type="number"
+            value={usdValue}
+            step={gdpUsd / 1000}
+            onChange={(e) => onUsdChange(parseFloat(e.target.value) || 0)}
+            className="w-full rounded border border-border bg-white px-2 py-1 text-right text-[11px] font-mono text-emerald-700 dark:bg-slate-800 dark:text-emerald-300"
+          />
+          <span className="text-[10px] text-slate-400">{fmtUSD(usdValue).split(" ").slice(1).join(" ")}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================================
+   Main page
+   ========================================================================= */
+
+type ApiResult = {
+  elapsed_seconds: number;
+  years: number[];
+  gdp_pct_dev: (number | null)[];
+  k_pct_dev?: (number | null)[];
+  debt_pct_gdp_dev?: (number | null)[];
+  private_inv?: (number | null)[];
+  private_cons_pct_dev?: (number | null)[];
+  consumption_tax?: number[];
+  labor_tax?: number[];
+  params: Record<string, unknown>;
+};
+
 export default function DsgePage() {
-  const [regions, setRegions] = useState<Record<string, RegionInfo>>(REGIONS_FALLBACK);
   const [region, setRegion] = useState("RegionII");
   const [damageRun, setDamageRun] = useState<"Run1" | "Run2">("Run1");
-  const [g, setG] = useState(0.0696);
-  const [vaN, setVaN] = useState(0.5045);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ApiResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [gdpUsd, setGdpUsd] = useState(100_000_000_000); // 100B USD default
+  const [params, setParams] = useState<Record<string, number>>(defaultParams);
+  const setParam = (k: string, v: number) => setParams((p) => ({ ...p, [k]: v }));
 
-  // Fetch region defaults from API (optional; falls back to embedded)
+  const [regions, setRegions] = useState<Record<string, RegionInfo>>(REGIONS_FALLBACK);
   useEffect(() => {
     fetch(`${API_BASE}/regions`)
-      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(setRegions)
       .catch(() => {});
   }, []);
 
-  // Update g, VA_n when region / damageRun changes
   useEffect(() => {
     const info = regions[region];
     if (!info) return;
-    if (damageRun === "Run1") {
-      setG(info.g_run1);
-      setVaN(info.van_run1);
-    } else {
-      setG(info.g_run2);
-      setVaN(info.van_run2);
-    }
+    const g  = damageRun === "Run1" ? info.g_run1   : info.g_run2;
+    const vn = damageRun === "Run1" ? info.van_run1 : info.van_run2;
+    setParams((p) => ({ ...p, g, VA_n: vn }));
   }, [region, damageRun, regions]);
 
-  const damageIdx = damageRun === "Run2" ? 2 : 1;
-  const kpis = useMemo(() => {
-    if (!result) return null;
-    const at = (offset: number) => result.gdp_pct_dev[damageIdx + offset] ?? null;
-    return {
-      damage: at(0),
-      year1:  at(1),
-      year5:  at(5),
-      year10: at(10),
-      elapsed: result.elapsed_seconds,
-    };
-  }, [result, damageIdx]);
-
-  const fmtPct = (v: number | null) =>
-    v == null ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<ApiResult | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setResult(null);
+    setLoading(true); setError(null); setResult(null);
     try {
       const resp = await fetch(`${API_BASE}/simulate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region, damage_run: damageRun, g, VA_n: vaN }),
+        body: JSON.stringify({ region, damage_run: damageRun, params }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
@@ -169,154 +312,255 @@ export default function DsgePage() {
     }
   }
 
+  const damageIdx = damageRun === "Run2" ? 2 : 1;
+  const kpis = useMemo(() => {
+    if (!result) return null;
+    const at = (off: number) => result.gdp_pct_dev[damageIdx + off] ?? null;
+    return {
+      damage: at(0), year1: at(1), year5: at(5), year10: at(10),
+      elapsed: result.elapsed_seconds,
+    };
+  }, [result, damageIdx]);
+
+  const usdLoss = useMemo(() => {
+    if (!result || !kpis) return null;
+    const calc = (p: number | null) => (p != null ? (p / 100) * gdpUsd : null);
+    return { damage: calc(kpis.damage), year1: calc(kpis.year1), year5: calc(kpis.year5), year10: calc(kpis.year10) };
+  }, [kpis, gdpUsd]);
+
   return (
-    <div className="mx-auto max-w-[960px] px-4 py-10">
+    <div className="mx-auto max-w-[1240px] px-4 py-10">
+      {/* ===== Hero ===== */}
       <header className="mb-8 border-b-[3px] border-accent pb-4 text-center">
         <h1 className="mb-1 text-2xl font-bold text-[#1e3a5f] dark:text-accent">
           経済被害評価DSGEモデル
         </h1>
         <p className="text-sm text-muted">
-          Macroeconomic Disaster Impact (DIGNAD on Octave 6.4 + Dynare 4.5.6)
+          DIGNAD (Debt, Investment, Growth, and Natural Disasters) on GNU Octave 6.4 + Dynare 4.5.6
         </p>
         <p className="mt-1 text-xs text-muted">
           オリエンタルコンサルタンツグローバル 水資源・防災部
         </p>
       </header>
 
-      <section className="mb-8 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
-        <h2 className="mb-4 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
-          概要
+      {/* ===== What is DSGE ===== */}
+      <section className="mb-6 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
+        <h2 className="mb-3 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
+          DSGE モデルとは?
         </h2>
-        <p className="text-sm leading-relaxed text-muted">
-          IMF の DIGNAD (Debt, Investment, Growth, and Natural Disasters) モデルをベースに、
-          フィリピン17地域を対象として自然災害が GDP・公的債務・民間投資に与える 20 年間の
-          動学的影響をシミュレーションします。Region II (Cagayan Valley) の Lawin 2015 /
-          Ompong 2016 を基準被害シナリオとし、各地域の構造パラメータ (g, VA<sub>n</sub>)
-          を変えて応答を比較できます。計算エンジンは <strong>GNU Octave 6.4 + Dynare 4.5.6</strong>
-          (Linux ソースビルド)、Cloud Run 上で実行されます。1リクエストあたり 60〜90秒です。
-        </p>
+        <div className="space-y-3 text-sm leading-relaxed text-muted">
+          <p>
+            <strong>DSGE (Dynamic Stochastic General Equilibrium)</strong> モデルは、
+            経済全体を「最適化する家計・企業・政府の相互作用」として動学的に記述する
+            マクロ経済モデルです。中央銀行・IMF・主要研究機関で政策シミュレーションの中核
+            ツールとして使われています。
+          </p>
+          <ul className="ml-5 list-disc space-y-1">
+            <li><strong>Dynamic</strong>: 各期(年)の意思決定が将来期待を含む</li>
+            <li><strong>Stochastic</strong>: 外的ショック (災害、金利、需要) に対する応答を計算</li>
+            <li><strong>General Equilibrium</strong>: 家計・企業・政府・海外の市場すべてが同時に均衡</li>
+          </ul>
+          <p>
+            DSGE は「需要・供給・財政・金融が連動した波及効果」を 1 つの整合的フレームワークで
+            評価できる強みがあり、災害・パンデミック・気候変動など多面的ショックの影響評価に適しています。
+          </p>
+        </div>
       </section>
 
-      <section className="mb-8 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
-        <h2 className="mb-4 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
-          入力
+      {/* ===== DIGNAD model overview ===== */}
+      <section className="mb-6 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
+        <h2 className="mb-3 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
+          DIGNAD モデルの構造
         </h2>
-        <form onSubmit={submit} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4 text-sm leading-relaxed text-muted">
+          <p>
+            <strong>DIGNAD</strong> は IMF が低所得・新興国の災害マクロ財政分析のために
+            開発した小国開放経済 DSGE モデルです (Marto, Papageorgiou &amp; Klyuev, <em>Journal of
+            Development Economics</em> Vol.135, 2018; Buffie et al. 2012)。過去 10 年間で
+            アフリカ・アジア・太平洋の 70 カ国以上で実用されました。
+          </p>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-md border border-accent/30 bg-accent-light/30 p-3">
+              <h3 className="mb-1 text-sm font-bold text-accent">① 家計部門</h3>
+              <p className="text-xs">
+                金融アクセスを持つ「貯蓄家計 (Savers)」と、流動性制約家計
+                (Non-Savers, 全人口の ~60%) の 2 タイプ。労働供給・消費・貯蓄を
+                最適化。送金・政府移転も含む。
+              </p>
+            </div>
+            <div className="rounded-md border border-accent/30 bg-accent-light/30 p-3">
+              <h3 className="mb-1 text-sm font-bold text-accent">② 企業部門</h3>
+              <p className="text-xs">
+                貿易財 (T) と非貿易財 (NT) の 2 部門。Cobb-Douglas 技術で資本と労働を
+                投入、TFP は公共インフラ・ストックに依存。標準インフラと適応インフラ
+                は完全代替で集約。
+              </p>
+            </div>
+            <div className="rounded-md border border-accent/30 bg-accent-light/30 p-3">
+              <h3 className="mb-1 text-sm font-bold text-accent">③ 政府部門</h3>
+              <p className="text-xs">
+                消費税・労働所得税・移転を操作。国内債/譲許債/対外商業債/対外私債/
+                外援助/天然資源収入を組み合わせて投資 (標準/適応) を財源化。財政ルール
+                or 債務調整いずれかで均衡。
+              </p>
+            </div>
+          </div>
+          <p className="mt-2">
+            <strong>災害は 5 つのチャネルで経済に伝播</strong>します:
+          </p>
+          <ol className="ml-5 list-decimal space-y-1">
+            <li><strong>公共資本ストックの破壊</strong> → 政府による再建コスト</li>
+            <li><strong>民間資本ストックの破壊</strong> → 民間投資による回復、調整コスト</li>
+            <li><strong>TFP 一時低下</strong> → 外生的・段階的に回復</li>
+            <li><strong>対外債務リスクプレミアム上昇</strong> → 借入コスト増</li>
+            <li><strong>公共投資効率低下</strong> → 容量制約による再建非効率</li>
+          </ol>
+        </div>
+      </section>
+
+      {/* ===== Top-level controls + parameter grid ===== */}
+      <section className="mb-6 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
+        <h2 className="mb-4 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
+          シナリオ設定
+        </h2>
+        <form onSubmit={submit}>
+          <div className="grid gap-4 md:grid-cols-3">
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">地域</span>
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800"
-              >
-                {Object.entries(regions).map(([key, info]) => (
-                  <option key={key} value={key}>{info.label}</option>
-                ))}
+              <select value={region} onChange={(e) => setRegion(e.target.value)}
+                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
+                {Object.entries(regions).map(([k, v]) => (<option key={k} value={k}>{v.label}</option>))}
               </select>
             </label>
-
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">被害シナリオ</span>
-              <select
-                value={damageRun}
-                onChange={(e) => setDamageRun(e.target.value as "Run1" | "Run2")}
-                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800"
-              >
-                <option value="Run1">Run1 (2015 Lawin 相当)</option>
-                <option value="Run2">Run2 (2016 Ompong 相当, 軽め)</option>
+              <select value={damageRun} onChange={(e) => setDamageRun(e.target.value as "Run1"|"Run2")}
+                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
+                <option value="Run1">Run1 (Lawin 2015 相当)</option>
+                <option value="Run2">Run2 (Ompong 2016 相当, 軽め)</option>
               </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-muted">
+                ベースライン GDP (USD) <span className="text-[10px] opacity-60">— %偏差を金額換算する基準</span>
+              </span>
+              <input type="number" value={gdpUsd} min={1e6} step={1e9}
+                onChange={(e) => setGdpUsd(parseFloat(e.target.value) || 0)}
+                className="w-full rounded-md border border-border bg-white px-3 py-2 text-right text-sm font-mono dark:bg-slate-800"
+              />
+              <div className="mt-1 text-right text-[11px] font-mono text-emerald-700">{fmtUSD(gdpUsd)}</div>
             </label>
           </div>
 
-          <label className="block">
-            <span className="mb-1 flex items-center justify-between text-xs font-medium text-muted">
-              <span>トレンド成長率 g <span className="text-[10px] opacity-60">(0.02〜0.10、上限0.10)</span></span>
-              <span className="font-mono text-accent">{g.toFixed(4)}</span>
-            </span>
-            <input
-              type="range" min="0.02" max="0.10" step="0.001"
-              value={g} onChange={(e) => setG(parseFloat(e.target.value))}
-              className="w-full"
-            />
-          </label>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {ALL_GROUPS.map((g) => (
+              <div key={g.id} className="rounded-md border border-border bg-white p-4 dark:bg-slate-950">
+                <div className="mb-3 flex items-baseline justify-between">
+                  <h3 className="text-sm font-bold text-[#1e3a5f] dark:text-accent">{g.title}</h3>
+                  <span className="text-[10px] text-muted">{g.subtitle}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 xl:grid-cols-3">
+                  {g.params.map((p) => (
+                    <NumField key={p.key} def={p} value={params[p.key] ?? p.default}
+                              onChange={(v) => setParam(p.key, v)} gdpUsd={gdpUsd} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
 
-          <label className="block">
-            <span className="mb-1 flex items-center justify-between text-xs font-medium text-muted">
-              <span>非貿易部門比率 VA<sub>n</sub> <span className="text-[10px] opacity-60">(0.30〜0.90)</span></span>
-              <span className="font-mono text-accent">{vaN.toFixed(4)}</span>
-            </span>
-            <input
-              type="range" min="0.30" max="0.90" step="0.005"
-              value={vaN} onChange={(e) => setVaN(parseFloat(e.target.value))}
-              className="w-full"
-            />
-          </label>
-
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-md bg-accent px-5 py-2 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-60 disabled:cursor-wait"
-            >
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <button type="submit" disabled={loading}
+              className="rounded-md bg-accent px-6 py-2.5 text-sm font-semibold text-white shadow hover:bg-accent/90 disabled:cursor-wait disabled:opacity-60">
               {loading ? "計算中... (~60秒)" : "シミュレーション実行"}
+            </button>
+            <button type="button" onClick={() => setParams(defaultParams())}
+              className="rounded-md border border-border bg-white px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-100">
+              すべて既定値にリセット
             </button>
             {error && <span className="text-xs text-red-600">エラー: {error}</span>}
           </div>
         </form>
       </section>
 
-      {result && kpis && (
-        <section className="mb-8 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
+      {/* ===== Results ===== */}
+      {result && kpis && usdLoss && (
+        <section className="mb-6 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
           <h2 className="mb-4 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
-            結果
+            シミュレーション結果
           </h2>
-          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
-            {([
-              { label: "災害年 GDP偏差", v: kpis.damage },
-              { label: "+1年",          v: kpis.year1 },
-              { label: "+5年",          v: kpis.year5 },
-              { label: "+10年",         v: kpis.year10 },
-            ] as const).map((k) => (
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+            {[
+              { label: "災害年 GDP偏差", pct: kpis.damage, usd: usdLoss.damage },
+              { label: "+1年",         pct: kpis.year1,  usd: usdLoss.year1 },
+              { label: "+5年",         pct: kpis.year5,  usd: usdLoss.year5 },
+              { label: "+10年",        pct: kpis.year10, usd: usdLoss.year10 },
+              { label: "計算時間",     pct: null,        usd: null, extra: `${kpis.elapsed.toFixed(1)} s` },
+            ].map((k) => (
               <div key={k.label} className="rounded-md border border-border bg-slate-50 px-3 py-2 dark:bg-slate-900">
                 <div className="text-[10px] text-muted">{k.label}</div>
-                <div className={`text-base font-bold font-mono ${k.v == null ? "" : k.v < 0 ? "text-red-700" : "text-green-700"}`}>
-                  {fmtPct(k.v)}
-                </div>
+                {k.extra ? (
+                  <div className="text-base font-bold font-mono text-slate-700">{k.extra}</div>
+                ) : (
+                  <>
+                    <div className={`text-base font-bold font-mono ${k.pct == null ? "" : k.pct < 0 ? "text-red-700" : "text-green-700"}`}>
+                      {fmtPct(k.pct)}
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-mono text-emerald-700">{fmtUSD(k.usd ?? 0)}</div>
+                  </>
+                )}
               </div>
             ))}
-            <div className="rounded-md border border-border bg-slate-50 px-3 py-2 dark:bg-slate-900">
-              <div className="text-[10px] text-muted">計算時間</div>
-              <div className="text-base font-bold font-mono">{kpis.elapsed.toFixed(1)} s</div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+              <LineChart years={result.years} values={result.gdp_pct_dev} color="#1d4ed8" ylabel="Real GDP 偏差 (%)" />
             </div>
+            {result.private_cons_pct_dev && (
+              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+                <LineChart years={result.years} values={result.private_cons_pct_dev} color="#ea580c" ylabel="民間消費 偏差 (%)" />
+              </div>
+            )}
+            {result.debt_pct_gdp_dev && (
+              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+                <LineChart years={result.years} values={result.debt_pct_gdp_dev} color="#7c3aed" ylabel="国内公的債務 偏差 (%)" />
+              </div>
+            )}
+            {result.private_inv && (
+              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+                <LineChart years={result.years} values={result.private_inv} color="#0d9488" ylabel="民間投資 水準" />
+              </div>
+            )}
           </div>
-          <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-            <GdpChart years={result.years} values={result.gdp_pct_dev} />
-            <p className="mt-2 text-xs text-muted">
-              Real GDP 偏差 (% from initial year)
-            </p>
-          </div>
-          <details className="mt-3 text-xs text-muted">
+
+          <details className="mt-4 text-xs text-muted">
             <summary className="cursor-pointer">レスポンス全文 (JSON)</summary>
-            <pre className="mt-2 max-h-60 overflow-auto rounded bg-slate-900 p-3 text-[11px] text-slate-100">
+            <pre className="mt-2 max-h-80 overflow-auto rounded bg-slate-900 p-3 text-[10px] text-slate-100">
               {JSON.stringify(result, null, 2)}
             </pre>
           </details>
         </section>
       )}
 
+      {/* ===== Notes ===== */}
       <section className="rounded-lg border border-border bg-card-bg p-6 shadow-sm">
-        <h2 className="mb-4 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
-          モデル概要
+        <h2 className="mb-3 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
+          技術ノート
         </h2>
         <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed text-muted">
-          <li>Marto, Papageorgiou &amp; Klyuev (2018), <em>Journal of Development Economics</em> Vol.135 を基盤とした IMF RES の DSGE モデル</li>
-          <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> (Linux ソースビルド)、Cloud Run 上で実行</li>
-          <li>地域別 g, VA<sub>n</sub> は PSA 2018PSNA 名目GRDPから算出</li>
-          <li>被害ショックは Region II の 2015/2016 推計値を全地域に同一適用 (構造応答比較)</li>
-          <li>制約: g &ge; 0.10 で Dynare Jacobian が爆発するため 0.10 にキャップ</li>
+          <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> (Linux ソースビルド), Cloud Run 上で実行。1リクエスト ~60秒。</li>
+          <li>地域別 <code>g</code>, <code>VA<sub>n</sub></code> は PSA 2018PSNA 名目GRDPから算出 (フィリピン 17 地域)。</li>
+          <li>制約: <code>g ≥ 0.10</code> で Dynare Jacobian が爆発するため自動的に 0.10 にキャップ。</li>
+          <li>USD 換算は「Real GDP 偏差 (%) × ベースライン GDP (USD)」の単純線形換算で、為替変動・物価変動は考慮していません。</li>
+          <li>パラメータ詳細・出典: <a href="https://www.elibrary.imf.org/view/journals/005/2023/003/article-A001-en.xml" target="_blank" rel="noopener noreferrer" className="text-accent underline">IMF Technical Note 2023/03</a> 参照。</li>
         </ul>
       </section>
+
+      <footer className="mt-6 text-center text-[11px] text-muted">
+        DIGNAD model: Marto, Papageorgiou &amp; Klyuev (2018), <em>Journal of Development Economics</em> Vol.135 ·
+        IMF DIGNAD Toolkit (Aligishiev, Ruane &amp; Sultanov 2023)
+      </footer>
     </div>
   );
 }
