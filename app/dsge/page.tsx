@@ -131,14 +131,79 @@ const DAMAGE_TFP: ParamDef[] = [
     tooltip: "災害による非貿易財部門のTFP直接低下%。インフラ寸断・物流停止等の直接影響。" },
 ];
 
-const ALL_GROUPS: { id: string; title: string; subtitle: string; params: ParamDef[] }[] = [
-  { id: "infra",       title: "公共インフラ・パラメータ",   subtitle: "標準 + 適応資本", params: PUB_INFRA },
-  { id: "economy",     title: "実体経済パラメータ",         subtitle: "成長率・部門構成・家計", params: REAL_ECON },
-  { id: "debt",        title: "債務・収入パラメータ",       subtitle: "公的/民間債務・金利", params: DEBT_REV },
-  { id: "fiscal",      title: "財政手段パラメータ",         subtitle: "税率・財政調整ウェイト", params: FISCAL },
-  { id: "dmg_public",  title: "災害被害 ① 公共インフラ",    subtitle: "公共資本破壊・再建非効率・リスクプレミアム", params: DAMAGE_PUBLIC },
-  { id: "dmg_private", title: "災害被害 ② 家計・民間資産",  subtitle: "民間資本破壊・貿易/非貿易財配分", params: DAMAGE_PRIVATE },
-  { id: "dmg_tfp",     title: "災害被害 ③ 生産性・その他",  subtitle: "TFP直接低下(貿易/非貿易財別)", params: DAMAGE_TFP },
+type GroupDef = {
+  id: string;
+  title: string;
+  subtitle: string;
+  params: ParamDef[];
+  // Tailwind classes for card background / border / accent
+  cardBg: string;       // outer card background
+  cardBorder: string;   // outer card border
+  fieldBg: string;      // individual field background
+  badgeBg: string;      // small color badge
+  titleColor: string;
+};
+
+const ALL_GROUPS: GroupDef[] = [
+  // ===== 災害被害 (3 cards) — 最上部 =====
+  { id: "dmg_public", title: "災害被害 ① 公共インフラ",
+    subtitle: "公共資本破壊・再建非効率・リスクプレミアム",
+    params: DAMAGE_PUBLIC,
+    cardBg: "bg-rose-50/70 dark:bg-rose-950/40",
+    cardBorder: "border-rose-300 dark:border-rose-800",
+    fieldBg: "bg-white dark:bg-rose-950/60",
+    badgeBg: "bg-rose-500",
+    titleColor: "text-rose-800 dark:text-rose-200" },
+  { id: "dmg_private", title: "災害被害 ② 家計・民間資産",
+    subtitle: "民間資本破壊・貿易/非貿易財配分",
+    params: DAMAGE_PRIVATE,
+    cardBg: "bg-orange-50/70 dark:bg-orange-950/40",
+    cardBorder: "border-orange-300 dark:border-orange-800",
+    fieldBg: "bg-white dark:bg-orange-950/60",
+    badgeBg: "bg-orange-500",
+    titleColor: "text-orange-800 dark:text-orange-200" },
+  { id: "dmg_tfp", title: "災害被害 ③ 生産性・その他",
+    subtitle: "TFP直接低下(貿易/非貿易財別)",
+    params: DAMAGE_TFP,
+    cardBg: "bg-amber-50/70 dark:bg-amber-950/40",
+    cardBorder: "border-amber-300 dark:border-amber-800",
+    fieldBg: "bg-white dark:bg-amber-950/60",
+    badgeBg: "bg-amber-500",
+    titleColor: "text-amber-800 dark:text-amber-200" },
+
+  // ===== 構造パラメータ (4 cards) =====
+  { id: "infra", title: "公共インフラ・パラメータ",
+    subtitle: "標準 + 適応資本(構造)",
+    params: PUB_INFRA,
+    cardBg: "bg-sky-50/70 dark:bg-sky-950/40",
+    cardBorder: "border-sky-300 dark:border-sky-800",
+    fieldBg: "bg-white dark:bg-sky-950/60",
+    badgeBg: "bg-sky-500",
+    titleColor: "text-sky-800 dark:text-sky-200" },
+  { id: "economy", title: "実体経済パラメータ",
+    subtitle: "成長率・部門構成・家計",
+    params: REAL_ECON,
+    cardBg: "bg-emerald-50/70 dark:bg-emerald-950/40",
+    cardBorder: "border-emerald-300 dark:border-emerald-800",
+    fieldBg: "bg-white dark:bg-emerald-950/60",
+    badgeBg: "bg-emerald-500",
+    titleColor: "text-emerald-800 dark:text-emerald-200" },
+  { id: "debt", title: "債務・収入パラメータ",
+    subtitle: "公的/民間債務・金利",
+    params: DEBT_REV,
+    cardBg: "bg-violet-50/70 dark:bg-violet-950/40",
+    cardBorder: "border-violet-300 dark:border-violet-800",
+    fieldBg: "bg-white dark:bg-violet-950/60",
+    badgeBg: "bg-violet-500",
+    titleColor: "text-violet-800 dark:text-violet-200" },
+  { id: "fiscal", title: "財政手段パラメータ",
+    subtitle: "税率・財政調整ウェイト",
+    params: FISCAL,
+    cardBg: "bg-slate-100 dark:bg-slate-900/60",
+    cardBorder: "border-slate-300 dark:border-slate-700",
+    fieldBg: "bg-white dark:bg-slate-950",
+    badgeBg: "bg-slate-500",
+    titleColor: "text-slate-800 dark:text-slate-200" },
 ];
 
 /* ============================================================================
@@ -209,17 +274,43 @@ function LineChart({ years, values, color, ylabel }:
 }
 
 /* ============================================================================
+   Parameter card (group of NumFields, with group-specific colors)
+   ========================================================================= */
+
+function ParamCard({ group, params, setParam, gdpUsd }:
+  { group: GroupDef; params: Record<string, number>; setParam: (k: string, v: number) => void; gdpUsd: number }) {
+  return (
+    <div className={`rounded-md border-2 p-4 shadow-sm ${group.cardBg} ${group.cardBorder}`}>
+      <div className="mb-3 flex items-baseline justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className={`inline-block h-3 w-3 rounded-full ${group.badgeBg}`} />
+          <h3 className={`text-sm font-bold ${group.titleColor}`}>{group.title}</h3>
+        </div>
+        <span className="text-[10px] text-muted">{group.subtitle}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-3">
+        {group.params.map((p) => (
+          <NumField key={p.key} def={p} value={params[p.key] ?? p.default}
+                    onChange={(v) => setParam(p.key, v)} gdpUsd={gdpUsd}
+                    fieldBg={group.fieldBg} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
    Parameter input field
    ========================================================================= */
 
-function NumField({ def, value, onChange, gdpUsd }:
-  { def: ParamDef; value: number; onChange: (v: number) => void; gdpUsd: number }) {
+function NumField({ def, value, onChange, gdpUsd, fieldBg }:
+  { def: ParamDef; value: number; onChange: (v: number) => void; gdpUsd: number; fieldBg?: string }) {
   const [showTip, setShowTip] = useState(false);
   const usdValue = def.unit === "usd_pct" ? value * gdpUsd : null;
   const onUsdChange = (usd: number) => { if (gdpUsd) onChange(usd / gdpUsd); };
 
   return (
-    <div className="relative rounded-md border border-border bg-slate-50 px-3 py-2 dark:bg-slate-900">
+    <div className={`relative rounded-md border border-border px-3 py-2 ${fieldBg ?? "bg-slate-50 dark:bg-slate-900"}`}>
       <div className="mb-1 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="truncate text-[11px] font-medium text-slate-700 dark:text-slate-200">{def.label}</div>
@@ -462,121 +553,30 @@ export default function DsgePage() {
               <div className="mt-1 text-right text-[11px] font-mono text-emerald-700">{fmtUSD(gdpUsd)}</div>
             </label>
           </div>
-          <p className="mt-3 text-[11px] text-muted">
-            ※ 災害被害は下記「災害被害」カード (公共インフラ・家計資産・生産性) で <strong>USD 金額または %</strong>
-            で直接入力してください。 地域選択は既定パラメータの調整のみで、被害は事前定義シナリオ(Run1/Run2)では
-            なく完全にユーザー入力で決まります。
-          </p>
+          <div className="mt-3 rounded-md border border-amber-200 bg-amber-50/60 p-3 text-[11px] leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <strong>ベースラインGDP</strong> = 対象地域の災害発生前の年間 GDP (USD)。 DIGNAD は GDP を内部で 100 に
+            標準化するため、 被害額(USD) と結果(USD偏差) を実額に換算するスケール係数として使われます。
+            例: フィリピン全国 ≈ 480B USD、 Region II ≈ 10B USD、 NCR ≈ 300B USD。
+            <br />※ 災害被害は下記の <strong className="text-rose-700 dark:text-rose-300">災害被害 ①〜③ カード</strong>
+            で <strong>USD 金額または %</strong> で直接入力してください。 事前定義シナリオ(Run1/Run2) は廃止し、
+            被害は完全にユーザー入力で決まります。
+          </div>
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {ALL_GROUPS.map((g) => (
-              <div key={g.id} className="rounded-md border border-border bg-white p-4 dark:bg-slate-950">
-                <div className="mb-3 flex items-baseline justify-between">
-                  <h3 className="text-sm font-bold text-[#1e3a5f] dark:text-accent">{g.title}</h3>
-                  <span className="text-[10px] text-muted">{g.subtitle}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 xl:grid-cols-3">
-                  {g.params.map((p) => (
-                    <NumField key={p.key} def={p} value={params[p.key] ?? p.default}
-                              onChange={(v) => setParam(p.key, v)} gdpUsd={gdpUsd} />
-                  ))}
-                </div>
-              </div>
+          {/* 災害被害 (最上部、赤系) */}
+          <div className="mt-6 mb-3 flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">災害シナリオ (Damage Shocks)</h3>
+            <span className="text-[10px] text-muted">— 災害規模をここで決定</span>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {ALL_GROUPS.filter(g => g.id.startsWith("dmg_")).map((g) => (
+              <ParamCard key={g.id} group={g} params={params} setParam={setParam} gdpUsd={gdpUsd} />
             ))}
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <button type="submit" disabled={loading}
-              className="rounded-md bg-accent px-6 py-2.5 text-sm font-semibold text-white shadow hover:bg-accent/90 disabled:cursor-wait disabled:opacity-60">
-              {loading ? "計算中... (~60秒)" : "シミュレーション実行"}
-            </button>
-            <button type="button" onClick={() => setParams(defaultParams())}
-              className="rounded-md border border-border bg-white px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-100">
-              すべて既定値にリセット
-            </button>
-            {error && <span className="text-xs text-red-600">エラー: {error}</span>}
+          {/* 構造パラメータ */}
+          <div className="mt-8 mb-3 flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-sky-500" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300">経済構造パラメータ (Calibration)</h3>
+            <span className="text-[10px] text-muted">— 既定値で動作 (高度な調整用)</span>
           </div>
-        </form>
-      </section>
-
-      {/* ===== Results ===== */}
-      {result && kpis && usdLoss && (
-        <section className="mb-6 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
-          <h2 className="mb-4 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
-            シミュレーション結果
-          </h2>
-          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
-            {[
-              { label: "災害年 GDP偏差", pct: kpis.damage, usd: usdLoss.damage },
-              { label: "+1年",         pct: kpis.year1,  usd: usdLoss.year1 },
-              { label: "+5年",         pct: kpis.year5,  usd: usdLoss.year5 },
-              { label: "+10年",        pct: kpis.year10, usd: usdLoss.year10 },
-              { label: "計算時間",     pct: null,        usd: null, extra: `${kpis.elapsed.toFixed(1)} s` },
-            ].map((k) => (
-              <div key={k.label} className="rounded-md border border-border bg-slate-50 px-3 py-2 dark:bg-slate-900">
-                <div className="text-[10px] text-muted">{k.label}</div>
-                {k.extra ? (
-                  <div className="text-base font-bold font-mono text-slate-700">{k.extra}</div>
-                ) : (
-                  <>
-                    <div className={`text-base font-bold font-mono ${k.pct == null ? "" : k.pct < 0 ? "text-red-700" : "text-green-700"}`}>
-                      {fmtPct(k.pct)}
-                    </div>
-                    <div className="mt-0.5 text-[10px] font-mono text-emerald-700">{fmtUSD(k.usd ?? 0)}</div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-              <LineChart years={result.years} values={result.gdp_pct_dev} color="#1d4ed8" ylabel="Real GDP 偏差 (%)" />
-            </div>
-            {result.private_cons_pct_dev && (
-              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-                <LineChart years={result.years} values={result.private_cons_pct_dev} color="#ea580c" ylabel="民間消費 偏差 (%)" />
-              </div>
-            )}
-            {result.debt_pct_gdp_dev && (
-              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-                <LineChart years={result.years} values={result.debt_pct_gdp_dev} color="#7c3aed" ylabel="国内公的債務 偏差 (%)" />
-              </div>
-            )}
-            {result.private_inv && (
-              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-                <LineChart years={result.years} values={result.private_inv} color="#0d9488" ylabel="民間投資 水準" />
-              </div>
-            )}
-          </div>
-
-          <details className="mt-4 text-xs text-muted">
-            <summary className="cursor-pointer">レスポンス全文 (JSON)</summary>
-            <pre className="mt-2 max-h-80 overflow-auto rounded bg-slate-900 p-3 text-[10px] text-slate-100">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </details>
-        </section>
-      )}
-
-      {/* ===== Notes ===== */}
-      <section className="rounded-lg border border-border bg-card-bg p-6 shadow-sm">
-        <h2 className="mb-3 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
-          技術ノート
-        </h2>
-        <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed text-muted">
-          <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> (Linux ソースビルド), Cloud Run 上で実行。1リクエスト ~60秒。</li>
-          <li>地域別 <code>g</code>, <code>VA<sub>n</sub></code> は PSA 2018PSNA 名目GRDPから算出 (フィリピン 17 地域)。</li>
-          <li>制約: <code>g ≥ 0.10</code> で Dynare Jacobian が爆発するため自動的に 0.10 にキャップ。</li>
-          <li>USD 換算は「Real GDP 偏差 (%) × ベースライン GDP (USD)」の単純線形換算で、為替変動・物価変動は考慮していません。</li>
-          <li>パラメータ詳細・出典: <a href="https://www.elibrary.imf.org/view/journals/005/2023/003/article-A001-en.xml" target="_blank" rel="noopener noreferrer" className="text-accent underline">IMF Technical Note 2023/03</a> 参照。</li>
-        </ul>
-      </section>
-
-      <footer className="mt-6 text-center text-[11px] text-muted">
-        DIGNAD model: Marto, Papageorgiou &amp; Klyuev (2018), <em>Journal of Development Economics</em> Vol.135 ·
-        IMF DIGNAD Toolkit (Aligishiev, Ruane &amp; Sultanov 2023)
-      </footer>
-    </div>
-  );
-}
