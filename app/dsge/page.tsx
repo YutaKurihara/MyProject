@@ -580,3 +580,104 @@ export default function DsgePage() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300">経済構造パラメータ (Calibration)</h3>
             <span className="text-[10px] text-muted">— 既定値で動作 (高度な調整用)</span>
           </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {ALL_GROUPS.filter(g => !g.id.startsWith("dmg_")).map((g) => (
+              <ParamCard key={g.id} group={g} params={params} setParam={setParam} gdpUsd={gdpUsd} />
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <button type="submit" disabled={loading}
+              className="rounded-md bg-accent px-6 py-2.5 text-sm font-semibold text-white shadow hover:bg-accent/90 disabled:cursor-wait disabled:opacity-60">
+              {loading ? "計算中... (~60秒)" : "シミュレーション実行"}
+            </button>
+            <button type="button" onClick={() => setParams(defaultParams())}
+              className="rounded-md border border-border bg-white px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-100">
+              すべて既定値にリセット
+            </button>
+            {error && <span className="text-xs text-red-600">エラー: {error}</span>}
+          </div>
+        </form>
+      </section>
+
+      {/* ===== Results ===== */}
+      {result && kpis && usdLoss && (
+        <section className="mb-6 rounded-lg border border-border bg-card-bg p-6 shadow-sm">
+          <h2 className="mb-4 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
+            シミュレーション結果
+          </h2>
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+            {[
+              { label: "災害年 GDP偏差", pct: kpis.damage, usd: usdLoss.damage },
+              { label: "+1年",         pct: kpis.year1,  usd: usdLoss.year1 },
+              { label: "+5年",         pct: kpis.year5,  usd: usdLoss.year5 },
+              { label: "+10年",        pct: kpis.year10, usd: usdLoss.year10 },
+              { label: "計算時間",     pct: null,        usd: null, extra: `${kpis.elapsed.toFixed(1)} s` },
+            ].map((k) => (
+              <div key={k.label} className="rounded-md border border-border bg-slate-50 px-3 py-2 dark:bg-slate-900">
+                <div className="text-[10px] text-muted">{k.label}</div>
+                {k.extra ? (
+                  <div className="text-base font-bold font-mono text-slate-700">{k.extra}</div>
+                ) : (
+                  <>
+                    <div className={`text-base font-bold font-mono ${k.pct == null ? "" : k.pct < 0 ? "text-red-700" : "text-green-700"}`}>
+                      {fmtPct(k.pct)}
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-mono text-emerald-700">{fmtUSD(k.usd ?? 0)}</div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+              <LineChart years={result.years} values={result.gdp_pct_dev} color="#1d4ed8" ylabel="Real GDP 偏差 (%)" />
+            </div>
+            {result.private_cons_pct_dev && (
+              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+                <LineChart years={result.years} values={result.private_cons_pct_dev} color="#ea580c" ylabel="民間消費 偏差 (%)" />
+              </div>
+            )}
+            {result.debt_pct_gdp_dev && (
+              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+                <LineChart years={result.years} values={result.debt_pct_gdp_dev} color="#7c3aed" ylabel="国内公的債務 偏差 (%)" />
+              </div>
+            )}
+            {result.private_inv && (
+              <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
+                <LineChart years={result.years} values={result.private_inv} color="#0d9488" ylabel="民間投資 水準" />
+              </div>
+            )}
+          </div>
+
+          <details className="mt-4 text-xs text-muted">
+            <summary className="cursor-pointer">レスポンス全文 (JSON)</summary>
+            <pre className="mt-2 max-h-80 overflow-auto rounded bg-slate-900 p-3 text-[10px] text-slate-100">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </details>
+        </section>
+      )}
+
+      {/* ===== Notes ===== */}
+      <section className="rounded-lg border border-border bg-card-bg p-6 shadow-sm">
+        <h2 className="mb-3 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
+          技術ノート
+        </h2>
+        <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed text-muted">
+          <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> (Linux ソースビルド), Cloud Run 上で実行。1リクエスト ~60秒。</li>
+          <li>地域別 <code>g</code>, <code>VA<sub>n</sub></code> は PSA 2018PSNA 名目GRDPから算出 (フィリピン 17 地域)。</li>
+          <li>制約: <code>g ≥ 0.10</code> で Dynare Jacobian が爆発するため自動的に 0.10 にキャップ。</li>
+          <li>USD 換算は「Real GDP 偏差 (%) × ベースライン GDP (USD)」の単純線形換算で、為替変動・物価変動は考慮していません。</li>
+          <li>パラメータ詳細・出典: <a href="https://www.elibrary.imf.org/view/journals/005/2023/003/article-A001-en.xml" target="_blank" rel="noopener noreferrer" className="text-accent underline">IMF Technical Note 2023/03</a> 参照。</li>
+        </ul>
+      </section>
+
+      <footer className="mt-6 text-center text-[11px] text-muted">
+        DIGNAD model: Marto, Papageorgiou &amp; Klyuev (2018), <em>Journal of Development Economics</em> Vol.135 ·
+        IMF DIGNAD Toolkit (Aligishiev, Ruane &amp; Sultanov 2023)
+      </footer>
+    </div>
+  );
+}
