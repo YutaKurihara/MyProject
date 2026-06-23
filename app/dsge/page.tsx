@@ -375,7 +375,8 @@ type ApiResult = {
 
 export default function DsgePage() {
   const [region, setRegion] = useState("RegionII");
-  const [gdpUsd, setGdpUsd] = useState(100_000_000_000); // 100B USD default
+  const [disasterYear, setDisasterYear] = useState<number>(2015);
+  const [gdpUsd, setGdpUsd] = useState(10_000_000_000); // 10B USD default (Region II 2015 相当)
   const [params, setParams] = useState<Record<string, number>>(defaultParams);
   const setParam = (k: string, v: number) => setParams((p) => ({ ...p, [k]: v }));
 
@@ -387,12 +388,45 @@ export default function DsgePage() {
       .catch(() => {});
   }, []);
 
-  // 地域変更時に g, VA_n のみ既定値で更新 (Run1テンプレ基準)
+  // 地域変更時に g (構造パラメータ既定値) のみ更新
   useEffect(() => {
     const info = regions[region];
     if (!info) return;
-    setParams((p) => ({ ...p, g: info.g_run1, VA_n: info.van_run1 }));
+    setParams((p) => ({ ...p, g: info.g_run1 }));
   }, [region, regions]);
+
+  // ===== 地域+年 → /economic-data 自動取得 =====
+  const [econLoading, setEconLoading] = useState(false);
+  const [econNote, setEconNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setEconLoading(true);
+    setEconNote(null);
+    fetch(`${API_BASE}/economic-data?region=${region}&year=${disasterYear}`)
+      .then((r) => (r.ok ? r.json() : r.json().then((j) => Promise.reject(j))))
+      .then((d) => {
+        if (cancelled) return;
+        if (d.grdp_usd) setGdpUsd(Math.round(d.grdp_usd));
+        const upd: Record<string, number> = {};
+        if (d.VA_n) upd.VA_n = d.VA_n;
+        if (d.g_trend) upd.g = Math.min(d.g_trend, 0.10); // hard cap
+        if (Object.keys(upd).length) setParams((p) => ({ ...p, ...upd }));
+        setEconNote(
+          `PSA ${d.year}: GRDP = ${d.grdp_usd ? (d.grdp_usd / 1e9).toFixed(2) : "—"} B USD `
+          + `(FX ${d.php_per_usd?.toFixed(2)} PHP/USD), `
+          + `VA_n = ${d.VA_n?.toFixed(4) ?? "—"}, `
+          + `g = ${d.g_trend ? (d.g_trend * 100).toFixed(2) + "%" : "—"} `
+          + `(過去${d.g_window ?? "—"}年CAGR)`
+        );
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setEconNote(`既定値を使用 (${err?.error ?? "PSAデータ取得失敗"})`);
+      })
+      .finally(() => !cancelled && setEconLoading(false));
+    return () => { cancelled = true; };
+  }, [region, disasterYear]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -407,7 +441,8 @@ export default function DsgePage() {
         headers: { "Content-Type": "application/json" },
         // damage_run は backend が template ファイルを選ぶための内部値
         // (Disaster 値はすべて params で上書きされるため Run1/Run2 の違いは消える)
-        body: JSON.stringify({ region, damage_run: "Run1", params }),
+        // disaster_year は結果の x 軸ラベルを災害年に合わせるためのヒント
+        body: JSON.stringify({ region, damage_run: "Run1", disaster_year: disasterYear, params }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
@@ -532,10 +567,10 @@ export default function DsgePage() {
           シナリオ設定
         </h2>
         <form onSubmit={submit}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">
-                対象地域 <span className="text-[10px] opacity-60">(g, VA<sub>n</sub> の既定値を地域から自動設定)</span>
+                対象地域
               </span>
               <select value={region} onChange={(e) => setRegion(e.target.value)}
                 className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
@@ -544,7 +579,19 @@ export default function DsgePage() {
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">
-                ベースライン GDP (USD) <span className="text-[10px] opacity-60">— 災害被害額や結果を金額換算する基準</span>
+                災害年 <span className="text-[10px] opacity-60">— その年のPSAデータが自動取得される</span>
+              </span>
+              <select value={disasterYear} onChange={(e) => setDisasterYear(parseInt(e.target.value, 10))}
+                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
+                {Array.from({ length: 24 }, (_, i) => 2000 + i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-muted">
+                ベースライン GDP (USD)
+                {econLoading && <span className="ml-1 text-[10px] text-accent">取得中...</span>}
               </span>
               <input type="number" value={gdpUsd} min={1e6} step={1e9}
                 onChange={(e) => setGdpUsd(parseFloat(e.target.value) || 0)}
@@ -553,6 +600,11 @@ export default function DsgePage() {
               <div className="mt-1 text-right text-[11px] font-mono text-emerald-700">{fmtUSD(gdpUsd)}</div>
             </label>
           </div>
+          {econNote && (
+            <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50/60 px-3 py-1.5 text-[11px] text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100">
+              📊 {econNote}
+            </div>
+          )}
           <div className="mt-3 rounded-md border border-amber-200 bg-amber-50/60 p-3 text-[11px] leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
             <strong>ベースラインGDP</strong> = 対象地域の災害発生前の年間 GDP (USD)。 DIGNAD は GDP を内部で 100 に
             標準化するため、 被害額(USD) と結果(USD偏差) を実額に換算するスケール係数として使われます。
