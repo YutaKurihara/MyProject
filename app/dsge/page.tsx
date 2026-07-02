@@ -335,7 +335,7 @@ function NumField({ def, value, onChange, gdpUsd, fieldBg }:
       <input
         type="number"
         value={Number.isFinite(value) ? value : 0}
-        min={def.min} max={def.max} step={def.step}
+        step="any"
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
         className="w-full rounded border border-border bg-white px-2 py-1 text-right text-xs font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-100"
       />
@@ -345,7 +345,7 @@ function NumField({ def, value, onChange, gdpUsd, fieldBg }:
           <input
             type="number"
             value={usdValue}
-            step={gdpUsd / 1000}
+            step="any"
             onChange={(e) => onUsdChange(parseFloat(e.target.value) || 0)}
             className="w-full rounded border border-border bg-white px-2 py-1 text-right text-[11px] font-mono text-emerald-700 dark:bg-slate-800 dark:text-emerald-300"
           />
@@ -579,26 +579,32 @@ export default function DsgePage() {
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">
-                災害年 <span className="text-[10px] opacity-60">— その年のPSAデータが自動取得される</span>
+                災害年 <span className="text-[10px] opacity-60">— その年のPSAデータが自動取得される (任意の整数)</span>
               </span>
-              <select value={disasterYear} onChange={(e) => setDisasterYear(parseInt(e.target.value, 10))}
-                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
-                {Array.from({ length: 24 }, (_, i) => 2000 + i).map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+              <input
+                type="number"
+                value={disasterYear}
+                step="any"
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) setDisasterYear(v);
+                }}
+                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800"
+              />
             </label>
-            <label className="block">
+            <div className="block">
               <span className="mb-1 block text-xs font-medium text-muted">
                 ベースライン GDP (USD)
                 {econLoading && <span className="ml-1 text-[10px] text-accent">取得中...</span>}
+                <span className="ml-1 text-[10px] opacity-60">— 地域+年から自動取得</span>
               </span>
-              <input type="number" value={gdpUsd} min={1e6} step={1e9}
-                onChange={(e) => setGdpUsd(parseFloat(e.target.value) || 0)}
-                className="w-full rounded-md border border-border bg-white px-3 py-2 text-right text-sm font-mono dark:bg-slate-800"
-              />
-              <div className="mt-1 text-right text-[11px] font-mono text-emerald-700">{fmtUSD(gdpUsd)}</div>
-            </label>
+              <div className="rounded-md border border-border bg-slate-50 px-3 py-2 text-right font-mono text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                {fmtUSD(gdpUsd)}
+              </div>
+              <div className="mt-1 text-right text-[10px] font-mono text-slate-400">
+                {gdpUsd.toLocaleString()} USD
+              </div>
+            </div>
           </div>
           {econNote && (
             <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50/60 px-3 py-1.5 text-[11px] text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100">
@@ -606,8 +612,9 @@ export default function DsgePage() {
             </div>
           )}
           <div className="mt-3 rounded-md border border-amber-200 bg-amber-50/60 p-3 text-[11px] leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-            <strong>ベースラインGDP</strong> = 対象地域の災害発生前の年間 GDP (USD)。 DIGNAD は GDP を内部で 100 に
-            標準化するため、 被害額(USD) と結果(USD偏差) を実額に換算するスケール係数として使われます。
+            <strong>ベースラインGDP</strong> は 地域 + 災害年 から PSA 2018PSNA データを使って自動取得されます。
+            DIGNAD は GDP を内部で 100 に標準化するため、 被害額(USD) と結果(USD偏差) を実額に換算する
+            スケール係数として使われます。
             例: フィリピン全国 ≈ 480B USD、 Region II ≈ 10B USD、 NCR ≈ 300B USD。
             <br />※ 災害被害は下記の <strong className="text-rose-700 dark:text-rose-300">災害被害 ①〜③ カード</strong>
             で <strong>USD 金額または %</strong> で直接入力してください。 事前定義シナリオ(Run1/Run2) は廃止し、
