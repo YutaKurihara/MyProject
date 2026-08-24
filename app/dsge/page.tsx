@@ -14,24 +14,31 @@ type RegionInfo = {
   g_run2: number; van_run2: number;
 };
 
+// g    = 実質一人当たり GRDP (PSA Table 2.2, 2018年基準実質価格) の
+//        2000-2023 年幾何平均成長率。DIGNAD の Calibration!F17
+//        "Trend per capita growth rate" の定義に一致する。
+//        (旧版は名目・総額 GRDP の成長率で 8-11.6% あり、7地域が数値上限に
+//         張り付いていた)
+// VA_n = 実質価格ベースの非貿易部門比率。貿易財 = 農林水産 + 鉱業 + 製造業
+//        + 情報通信 + 専門/事業サービス (後2者は IT-BPM 輸出部門)。
 const REGIONS_FALLBACK: Record<string, RegionInfo> = {
-  RegionII:   { label: "Region II (Cagayan Valley)",  g_run1: 0.0696, van_run1: 0.5045, g_run2: 0.0648, van_run2: 0.5583 },
-  NCR:        { label: "NCR",                          g_run1: 0.0915, van_run1: 0.8284, g_run2: 0.0904, van_run2: 0.8307 },
-  CAR:        { label: "CAR (Cordillera)",             g_run1: 0.0713, van_run1: 0.6454, g_run2: 0.0683, van_run2: 0.6873 },
-  RegionI:    { label: "Region I (Ilocos)",            g_run1: 0.0900, van_run1: 0.5751, g_run2: 0.0868, van_run2: 0.6101 },
-  RegionIII:  { label: "Region III (Central Luzon)",   g_run1: 0.1000, van_run1: 0.5280, g_run2: 0.0986, van_run2: 0.5603 },
-  RegionIVA:  { label: "Region IV-A (CALABARZON)",     g_run1: 0.0899, van_run1: 0.4459, g_run2: 0.0861, van_run2: 0.4686 },
-  MIMAROPA:   { label: "MIMAROPA",                     g_run1: 0.1000, van_run1: 0.4685, g_run2: 0.0995, van_run2: 0.5129 },
-  RegionV:    { label: "Region V (Bicol)",             g_run1: 0.0998, van_run1: 0.5483, g_run2: 0.0983, van_run2: 0.5972 },
-  RegionVI:   { label: "Region VI (Western Visayas)",  g_run1: 0.0915, van_run1: 0.6142, g_run2: 0.0910, van_run2: 0.6420 },
-  RegionVII:  { label: "Region VII (Central Visayas)", g_run1: 0.0900, van_run1: 0.6759, g_run2: 0.0900, van_run2: 0.6858 },
-  RegionVIII: { label: "Region VIII (Eastern Visayas)",g_run1: 0.0802, van_run1: 0.5568, g_run2: 0.0791, van_run2: 0.5851 },
-  RegionIX:   { label: "Region IX (Zamboanga)",        g_run1: 0.1000, van_run1: 0.5462, g_run2: 0.1000, van_run2: 0.5807 },
-  RegionX:    { label: "Region X (Northern Mindanao)", g_run1: 0.1000, van_run1: 0.5850, g_run2: 0.1000, van_run2: 0.5974 },
-  RegionXI:   { label: "Region XI (Davao)",            g_run1: 0.0965, van_run1: 0.6060, g_run2: 0.0958, van_run2: 0.6167 },
-  RegionXII:  { label: "Region XII (SOCCSKSARGEN)",    g_run1: 0.1000, van_run1: 0.4196, g_run2: 0.0956, van_run2: 0.4576 },
-  RegionXIII: { label: "Region XIII (Caraga)",         g_run1: 0.1000, van_run1: 0.5230, g_run2: 0.1000, van_run2: 0.5591 },
-  BARMM:      { label: "BARMM",                        g_run1: 0.1000, van_run1: 0.3682, g_run2: 0.0928, van_run2: 0.3974 },
+  RegionII:   { label: "Region II (Cagayan Valley)",  g_run1: 0.0332, van_run1: 0.4811, g_run2: 0.0332, van_run2: 0.5070 },
+  NCR:        { label: "NCR",                          g_run1: 0.0283, van_run1: 0.7165, g_run2: 0.0283, van_run2: 0.7104 },
+  CAR:        { label: "CAR (Cordillera)",             g_run1: 0.0274, van_run1: 0.5924, g_run2: 0.0274, van_run2: 0.6122 },
+  RegionI:    { label: "Region I (Ilocos)",            g_run1: 0.0365, van_run1: 0.6102, g_run2: 0.0365, van_run2: 0.6271 },
+  RegionIII:  { label: "Region III (Central Luzon)",   g_run1: 0.0326, van_run1: 0.4895, g_run2: 0.0326, van_run2: 0.5014 },
+  RegionIVA:  { label: "Region IV-A (CALABARZON)",     g_run1: 0.0215, van_run1: 0.4424, g_run2: 0.0215, van_run2: 0.4479 },
+  MIMAROPA:   { label: "MIMAROPA",                     g_run1: 0.0372, van_run1: 0.4814, g_run2: 0.0372, van_run2: 0.4970 },
+  RegionV:    { label: "Region V (Bicol)",             g_run1: 0.0421, van_run1: 0.5888, g_run2: 0.0421, van_run2: 0.6218 },
+  RegionVI:   { label: "Region VI (Western Visayas)",  g_run1: 0.0394, van_run1: 0.5802, g_run2: 0.0394, van_run2: 0.5979 },
+  RegionVII:  { label: "Region VII (Central Visayas)", g_run1: 0.0408, van_run1: 0.6350, g_run2: 0.0408, van_run2: 0.6368 },
+  RegionVIII: { label: "Region VIII (Eastern Visayas)",g_run1: 0.0295, van_run1: 0.6347, g_run2: 0.0295, van_run2: 0.6623 },
+  RegionIX:   { label: "Region IX (Zamboanga)",        g_run1: 0.0337, van_run1: 0.5548, g_run2: 0.0337, van_run2: 0.5759 },
+  RegionX:    { label: "Region X (Northern Mindanao)", g_run1: 0.0428, van_run1: 0.6011, g_run2: 0.0428, van_run2: 0.6067 },
+  RegionXI:   { label: "Region XI (Davao)",            g_run1: 0.0383, van_run1: 0.5866, g_run2: 0.0383, van_run2: 0.5885 },
+  RegionXII:  { label: "Region XII (SOCCSKSARGEN)",    g_run1: 0.0295, van_run1: 0.4667, g_run2: 0.0295, van_run2: 0.4854 },
+  RegionXIII: { label: "Region XIII (Caraga)",         g_run1: 0.0423, van_run1: 0.5248, g_run2: 0.0423, van_run2: 0.5459 },
+  BARMM:      { label: "BARMM",                        g_run1: 0.0264, van_run1: 0.4809, g_run2: 0.0264, van_run2: 0.4807 },
 };
 
 /* ============================================================================
@@ -66,8 +73,8 @@ const PUB_INFRA: ParamDef[] = [
 ];
 
 const REAL_ECON: ParamDef[] = [
-  { key: "g",       label: "Trend per-capita growth",  sublabel: "g",      default: 0.0696, min: 0.01, max: 0.10, step: 0.001, unit: "rate",
-    tooltip: "Steady-state per-capita real growth rate. Hard-capped at 10%." },
+  { key: "g",       label: "Trend per-capita growth",  sublabel: "g",      default: 0.0332, min: 0.005, max: 0.045, step: 0.001, unit: "rate",
+    tooltip: "実質・一人当たりのトレンド成長率。割引率 r_o は g + 0.002 に自動設定される (下の技術ノート参照)。" },
   { key: "oilro",   label: "Natural resource rev/GDP", sublabel: "N_o",    default: 0.00,   min: 0, max: 0.50, step: 0.01, unit: "ratio" },
   { key: "imp2gdp", label: "Imports/GDP",              sublabel: "I_o",    default: 0.2177, min: 0.05, max: 0.80, step: 0.01, unit: "ratio" },
   { key: "a_ratio", label: "NS/S labor ratio",         sublabel: "α",      default: 0.60,   min: 0, max: 5.0, step: 0.05, unit: "ratio",
@@ -90,8 +97,12 @@ const DEBT_REV: ParamDef[] = [
     tooltip: "External natural-disaster savings fund." },
   { key: "share_grants",label: "Grants/GDP",                 sublabel: "G_o",     default: 0.078, min: 0, max: 0.50, step: 0.005, unit: "ratio" },
   { key: "share_remit", label: "Remittances/GDP",            sublabel: "R_o",     default: 0.089, min: 0, max: 0.50, step: 0.005, unit: "ratio" },
-  { key: "ro",          label: "Real rate, domestic",        sublabel: "r_o",     default: 0.027, min: 0, max: 0.20, step: 0.005, unit: "rate" },
-  { key: "r_dco",       label: "Real rate, ext.commercial",  sublabel: "r_dc,o",  default: 0.022, min: 0, max: 0.20, step: 0.005, unit: "rate" },
+  // r_o と r_dc,o はスライダーから外してある。DIGNAD の割引因子は
+  // beta_t = (1+g)/(1+r_o) で、well-posed (beta_t < 1) かつ Blanchard-Kahn
+  // 条件を満たす窓が r_o - g <= 0.002 と非常に狭い。これを超えると解が
+  // 一意でなくなり、r_o = 0.05 では完全予見の求解自体が発散する。
+  // そのため値を送らず、backend に r_o = g + 0.002、r_dc,o = r_o - 0.005 を
+  // 導出させる。
   { key: "rstar",       label: "Risk-free foreign rate",     sublabel: "r^f",     default: 0.04,  min: 0, max: 0.15, step: 0.005, unit: "rate" },
 ];
 
@@ -365,8 +376,8 @@ type ApiResult = {
   years: number[];
   gdp_pct_dev: (number | null)[];
   k_pct_dev?: (number | null)[];
-  debt_pct_gdp_dev?: (number | null)[];
-  private_inv?: (number | null)[];
+  public_debt_pct_gdp?: (number | null)[];
+  private_inv_pct_dev?: (number | null)[];
   private_cons_pct_dev?: (number | null)[];
   consumption_tax?: number[];
   labor_tax?: number[];
@@ -407,17 +418,17 @@ export default function DsgePage() {
       .then((r) => (r.ok ? r.json() : r.json().then((j) => Promise.reject(j))))
       .then((d) => {
         if (cancelled) return;
-        if (d.grdp_usd) setGdpUsd(Math.round(d.grdp_usd));
+        if (d.grdp_usd_nominal) setGdpUsd(Math.round(d.grdp_usd_nominal));
         const upd: Record<string, number> = {};
         if (d.VA_n) upd.VA_n = d.VA_n;
-        if (d.g_trend) upd.g = Math.min(d.g_trend, 0.10); // hard cap
+        if (d.g_trend) upd.g = Math.min(d.g_trend, 0.045); // r_o = g + 0.002 の判定域内に収める
         if (Object.keys(upd).length) setParams((p) => ({ ...p, ...upd }));
         setEconNote(
-          `PSA ${d.year}: GRDP = ${d.grdp_usd ? (d.grdp_usd / 1e9).toFixed(2) : "—"} B USD `
+          `PSA ${d.year}: GRDP = ${d.grdp_usd_nominal ? (d.grdp_usd_nominal / 1e9).toFixed(2) : "—"} B USD `
           + `(FX ${d.php_per_usd?.toFixed(2)} PHP/USD), `
           + `VA_n = ${d.VA_n?.toFixed(4) ?? "—"}, `
           + `g = ${d.g_trend ? (d.g_trend * 100).toFixed(2) + "%" : "—"} `
-          + `(過去${d.g_window ?? "—"}年CAGR)`
+          + `(実質一人当たり, 過去${d.g_window ?? "—"}年幾何平均)`
         );
       })
       .catch((err) => {
@@ -690,21 +701,21 @@ export default function DsgePage() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-              <LineChart years={result.years} values={result.gdp_pct_dev} color="#1d4ed8" ylabel="Real GDP 偏差 (%)" />
+              <LineChart years={result.years} values={result.gdp_pct_dev} color="#1d4ed8" ylabel="実質GDP: 無災害ベースライン(BGP)からの乖離 (%)" />
             </div>
             {result.private_cons_pct_dev && (
               <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-                <LineChart years={result.years} values={result.private_cons_pct_dev} color="#ea580c" ylabel="民間消費 偏差 (%)" />
+                <LineChart years={result.years} values={result.private_cons_pct_dev} color="#ea580c" ylabel="家計消費 (貯蓄者+非貯蓄者): BGPからの乖離 (%)" />
               </div>
             )}
-            {result.debt_pct_gdp_dev && (
+            {result.public_debt_pct_gdp && (
               <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-                <LineChart years={result.years} values={result.debt_pct_gdp_dev} color="#7c3aed" ylabel="国内公的債務 偏差 (%)" />
+                <LineChart years={result.years} values={result.public_debt_pct_gdp} color="#7c3aed" ylabel="総公的債務 (国内+対外商業+譲許的) / GDP (%)" />
               </div>
             )}
-            {result.private_inv && (
+            {result.private_inv_pct_dev && (
               <div className="rounded-md border border-border bg-white p-3 dark:bg-slate-950">
-                <LineChart years={result.years} values={result.private_inv} color="#0d9488" ylabel="民間投資 水準" />
+                <LineChart years={result.years} values={result.private_inv_pct_dev} color="#0d9488" ylabel="民間投資 (両部門): BGPからの乖離 (%)" />
               </div>
             )}
           </div>
@@ -718,6 +729,17 @@ export default function DsgePage() {
         </section>
       )}
 
+      {/* ===== 結果の読み方 ===== */}
+      <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+        <strong className="block mb-1">結果の読み方</strong>
+        <ul className="ml-5 list-disc space-y-1">
+          <li>災害ショックは <strong>Region II (カガヤン流域) の年次洪水被害推計</strong>を全地域に同一適用しています。他地域の被害推計は存在しないため、
+              <strong>地域間の差は構造パラメータ (g, VA<sub>n</sub>) の違いのみに由来し、その地域の実際の災害リスクの大小を表しません</strong>。
+              実測では17地域の災害年 GDP 乖離の幅は 0.1 ポイント未満です。</li>
+          <li>推計値として引用できるのは Region II のみです。</li>
+        </ul>
+      </section>
+
       {/* ===== Notes ===== */}
       <section className="rounded-lg border border-border bg-card-bg p-6 shadow-sm">
         <h2 className="mb-3 border-b-2 border-accent-light pb-2 text-lg font-bold text-[#1e3a5f] dark:text-accent">
@@ -725,9 +747,12 @@ export default function DsgePage() {
         </h2>
         <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed text-muted">
           <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> (Linux ソースビルド), Cloud Run 上で実行。1リクエスト ~60秒。</li>
-          <li>地域別 <code>g</code>, <code>VA<sub>n</sub></code> は PSA 2018PSNA 名目GRDPから算出 (フィリピン 17 地域)。</li>
-          <li>制約: <code>g ≥ 0.10</code> で Dynare Jacobian が爆発するため自動的に 0.10 にキャップ。</li>
-          <li>USD 換算は「Real GDP 偏差 (%) × ベースライン GDP (USD)」の単純線形換算で、為替変動・物価変動は考慮していません。</li>
+          <li>地域別 <code>g</code> は PSA 2018PSNA の<strong>実質一人当たり GRDP</strong> (Table 2.2, 2018年基準実質価格) の 2000–2023 年幾何平均成長率。DIGNAD の <code>Calibration!F17</code>「Trend per capita growth rate」の定義に一致する。</li>
+          <li><code>VA<sub>n</sub></code> は<strong>実質価格ベース</strong>の非貿易部門比率。貿易財 = 農林水産 + 鉱業 + 製造業 + 情報通信 + 専門/事業サービス (後2者は IT-BPM 輸出部門) とし、残りを非貿易財とする。</li>
+          <li>割引因子は <code>β<sub>t</sub> = (1+g)/(1+r<sub>o</sub>)</code>。これが 1 未満であることが定常状態の存在条件なので、<code>r<sub>o</sub></code> は <code>g + 0.002</code>、<code>r<sub>dc,o</sub></code> は <code>r<sub>o</sub> − 0.005</code> に自動設定される。この幅を超えると Blanchard–Kahn 条件が破れて解が一意でなくなり、<code>r<sub>o</sub> = 0.05</code> では求解自体が発散する。</li>
+          <li>USD 換算は「GDP 乖離 (%) × ベースライン GDP (USD)」の単純線形換算で、為替変動・物価変動は考慮していません。</li>
+          <li>グラフの縦軸は<strong>「災害が起きなかった場合のベースライン成長経路 (BGP) からの乖離」</strong>です。災害後も水準は成長を続けるため、乖離が負でも GDP が前年割れするとは限りません。</li>
+          <li>国レベルの財政・債務ブロック (公的債務/GDP 61%、対外商業債務など) をそのまま地域に読み替えているため、財政・債務系列は参考値です。</li>
           <li>パラメータ詳細・出典: <a href="https://www.elibrary.imf.org/view/journals/005/2023/003/article-A001-en.xml" target="_blank" rel="noopener noreferrer" className="text-accent underline">IMF Technical Note 2023/03</a> 参照。</li>
         </ul>
       </section>
