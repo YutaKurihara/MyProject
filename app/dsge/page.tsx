@@ -79,7 +79,7 @@ const REAL_ECON: ParamDef[] = [
   { key: "imp2gdp", label: "Imports/GDP",              sublabel: "I_o",    default: 0.2177, min: 0.05, max: 0.80, step: 0.01, unit: "ratio" },
   { key: "a_ratio", label: "NS/S labor ratio",         sublabel: "α",      default: 0.60,   min: 0, max: 5.0, step: 0.05, unit: "ratio",
     tooltip: "Liquidity-constrained (NS) vs savers (S). Default: 60% are NS (Buffie 2012)." },
-  { key: "VA_n",    label: "Value added in NT sector", sublabel: "VA_n",   default: 0.5045, min: 0.20, max: 0.90, step: 0.01, unit: "ratio" },
+  { key: "VA_n",    label: "Value added in NT sector", sublabel: "VA_n",   default: 0.4811, min: 0.20, max: 0.90, step: 0.01, unit: "ratio" },
   { key: "alpha_x", label: "Capital share, T sector",  sublabel: "α_x",    default: 0.40,   min: 0.10, max: 0.80, step: 0.05, unit: "ratio" },
   { key: "alpha_n", label: "Capital share, NT sector", sublabel: "α_n",    default: 0.55,   min: 0.10, max: 0.80, step: 0.05, unit: "ratio" },
   { key: "alpha_k", label: "NT inputs in K_priv",      sublabel: "α_k",    default: 0.50,   min: 0.10, max: 0.90, step: 0.05, unit: "ratio" },
@@ -399,11 +399,12 @@ export default function DsgePage() {
       .catch(() => {});
   }, []);
 
-  // 地域変更時に g (構造パラメータ既定値) のみ更新
+  // 地域変更時に g と VA_n を既定値へ更新
+  // (VA_n も同期しないと、地域を変えても前の地域の非貿易部門比率が残る)
   useEffect(() => {
     const info = regions[region];
     if (!info) return;
-    setParams((p) => ({ ...p, g: info.g_run1 }));
+    setParams((p) => ({ ...p, g: info.g_run1, VA_n: info.van_run1 }));
   }, [region, regions]);
 
   // ===== 地域+年 → /economic-data 自動取得 =====
