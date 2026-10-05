@@ -32,16 +32,6 @@ const tools = [
     href: "/gcm-downscaling",
   },
   {
-    id: "dsge-model",
-    title: "経済被害評価DSGEモデル",
-    subtitle: "Macroeconomic Disaster Impact",
-    period: "第13期（2025年）",
-    description:
-      "IMFのDIGNADモデルをベースに、洪水被害がGDP・税収・家計に与える長期的な経済影響をシミュレーションする。",
-    status: "available" as const,
-    href: "/dsge",
-  },
-  {
     id: "flood-monitor",
     title: "洪水被害・経済影響 日次モニター",
     subtitle: "Daily Flood Damage and Economic Impact Monitor",

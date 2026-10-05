@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Data of the daily analysis. The files are replaced once a day (branch `flood-monitor-data`,
@@ -648,11 +647,6 @@ export default function FloodMonitorPage() {
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-xs text-muted">
-          マクロ経済モデルの概要は
-          <Link href="/dsge" className="mx-1 text-accent underline">経済被害評価DSGEモデル</Link>
-          をご覧ください。
-        </p>
       </Section>
     </div>
   );
