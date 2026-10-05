@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# daily data of /flood-monitor (fetched from the branch flood-monitor-data at build time)
+/public/flood-monitor-data/

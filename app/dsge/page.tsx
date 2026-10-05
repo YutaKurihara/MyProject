@@ -21,24 +21,11 @@ type RegionInfo = {
 //         張り付いていた)
 // VA_n = 実質価格ベースの非貿易部門比率。貿易財 = 農林水産 + 鉱業 + 製造業
 //        + 情報通信 + 専門/事業サービス (後2者は IT-BPM 輸出部門)。
+// 対象は Region II のみ (2026-10-05)。洪水被害の推計がカガヤン川流域にしか
+// ないため、他の16地域は対象から外した。
+const REGION = "RegionII";
 const REGIONS_FALLBACK: Record<string, RegionInfo> = {
   RegionII:   { label: "Region II (Cagayan Valley)",  g_run1: 0.0332, van_run1: 0.4811, g_run2: 0.0332, van_run2: 0.5070 },
-  NCR:        { label: "NCR",                          g_run1: 0.0283, van_run1: 0.7165, g_run2: 0.0283, van_run2: 0.7104 },
-  CAR:        { label: "CAR (Cordillera)",             g_run1: 0.0274, van_run1: 0.5924, g_run2: 0.0274, van_run2: 0.6122 },
-  RegionI:    { label: "Region I (Ilocos)",            g_run1: 0.0365, van_run1: 0.6102, g_run2: 0.0365, van_run2: 0.6271 },
-  RegionIII:  { label: "Region III (Central Luzon)",   g_run1: 0.0326, van_run1: 0.4895, g_run2: 0.0326, van_run2: 0.5014 },
-  RegionIVA:  { label: "Region IV-A (CALABARZON)",     g_run1: 0.0215, van_run1: 0.4424, g_run2: 0.0215, van_run2: 0.4479 },
-  MIMAROPA:   { label: "MIMAROPA",                     g_run1: 0.0372, van_run1: 0.4814, g_run2: 0.0372, van_run2: 0.4970 },
-  RegionV:    { label: "Region V (Bicol)",             g_run1: 0.0421, van_run1: 0.5888, g_run2: 0.0421, van_run2: 0.6218 },
-  RegionVI:   { label: "Region VI (Western Visayas)",  g_run1: 0.0394, van_run1: 0.5802, g_run2: 0.0394, van_run2: 0.5979 },
-  RegionVII:  { label: "Region VII (Central Visayas)", g_run1: 0.0408, van_run1: 0.6350, g_run2: 0.0408, van_run2: 0.6368 },
-  RegionVIII: { label: "Region VIII (Eastern Visayas)",g_run1: 0.0295, van_run1: 0.6347, g_run2: 0.0295, van_run2: 0.6623 },
-  RegionIX:   { label: "Region IX (Zamboanga)",        g_run1: 0.0337, van_run1: 0.5548, g_run2: 0.0337, van_run2: 0.5759 },
-  RegionX:    { label: "Region X (Northern Mindanao)", g_run1: 0.0428, van_run1: 0.6011, g_run2: 0.0428, van_run2: 0.6067 },
-  RegionXI:   { label: "Region XI (Davao)",            g_run1: 0.0383, van_run1: 0.5866, g_run2: 0.0383, van_run2: 0.5885 },
-  RegionXII:  { label: "Region XII (SOCCSKSARGEN)",    g_run1: 0.0295, van_run1: 0.4667, g_run2: 0.0295, van_run2: 0.4854 },
-  RegionXIII: { label: "Region XIII (Caraga)",         g_run1: 0.0423, van_run1: 0.5248, g_run2: 0.0423, van_run2: 0.5459 },
-  BARMM:      { label: "BARMM",                        g_run1: 0.0264, van_run1: 0.4809, g_run2: 0.0264, van_run2: 0.4807 },
 };
 
 /* ============================================================================
@@ -385,7 +372,7 @@ type ApiResult = {
 };
 
 export default function DsgePage() {
-  const [region, setRegion] = useState("RegionII");
+  const region = REGION;
   const [disasterYear, setDisasterYear] = useState<number>(2015);
   const [gdpUsd, setGdpUsd] = useState(10_000_000_000); // 10B USD default (Region II 2015 相当)
   const [params, setParams] = useState<Record<string, number>>(defaultParams);
@@ -399,15 +386,14 @@ export default function DsgePage() {
       .catch(() => {});
   }, []);
 
-  // 地域変更時に g と VA_n を既定値へ更新
-  // (VA_n も同期しないと、地域を変えても前の地域の非貿易部門比率が残る)
+  // API から既定値が届いたら g と VA_n を更新
   useEffect(() => {
     const info = regions[region];
     if (!info) return;
     setParams((p) => ({ ...p, g: info.g_run1, VA_n: info.van_run1 }));
   }, [region, regions]);
 
-  // ===== 地域+年 → /economic-data 自動取得 =====
+  // ===== 災害年 → /economic-data 自動取得 =====
   const [econLoading, setEconLoading] = useState(false);
   const [econNote, setEconNote] = useState<string | null>(null);
 
@@ -580,15 +566,14 @@ export default function DsgePage() {
         </h2>
         <form onSubmit={submit}>
           <div className="grid gap-4 md:grid-cols-3">
-            <label className="block">
+            <div className="block">
               <span className="mb-1 block text-xs font-medium text-muted">
                 対象地域
               </span>
-              <select value={region} onChange={(e) => setRegion(e.target.value)}
-                className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm dark:bg-slate-800">
-                {Object.entries(regions).map(([k, v]) => (<option key={k} value={k}>{v.label}</option>))}
-              </select>
-            </label>
+              <div className="rounded-md border border-border bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                {regions[region]?.label ?? REGIONS_FALLBACK[REGION].label}
+              </div>
+            </div>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted">
                 災害年 <span className="text-[10px] opacity-60">— その年のPSAデータが自動取得される</span>
@@ -607,7 +592,7 @@ export default function DsgePage() {
               <span className="mb-1 block text-xs font-medium text-muted">
                 ベースライン GDP (USD)
                 {econLoading && <span className="ml-1 text-[10px] text-accent">取得中...</span>}
-                <span className="ml-1 text-[10px] opacity-60">— 地域+年から自動取得</span>
+                <span className="ml-1 text-[10px] opacity-60">— 災害年から自動取得</span>
               </span>
               <div className="rounded-md border border-border bg-slate-50 px-3 py-2 text-right font-mono text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-200">
                 {fmtUSD(gdpUsd)}
@@ -623,10 +608,10 @@ export default function DsgePage() {
             </div>
           )}
           <div className="mt-3 rounded-md border border-amber-200 bg-amber-50/60 p-3 text-[11px] leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-            <strong>ベースラインGDP</strong> は 地域 + 災害年 から PSA 2018PSNA データを使って自動取得されます。
+            <strong>ベースラインGDP</strong> は Region II の災害年の値を PSA 2018PSNA データから自動取得します。
             DIGNAD は GDP を内部で 100 に標準化するため、 被害額(USD) と結果(USD偏差) を実額に換算する
             スケール係数として使われます。
-            例: フィリピン全国 ≈ 480B USD、 Region II ≈ 10B USD、 NCR ≈ 300B USD。
+            例: Region II の 2015 年 ≈ 10B USD。
             <br />※ 災害被害は下記の <strong className="text-rose-700 dark:text-rose-300">災害被害 ①〜③ カード</strong>
             で <strong>USD 金額または %</strong> で直接入力してください。 事前定義シナリオ(Run1/Run2) は廃止し、
             被害は完全にユーザー入力で決まります。
@@ -734,10 +719,8 @@ export default function DsgePage() {
       <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
         <strong className="block mb-1">結果の読み方</strong>
         <ul className="ml-5 list-disc space-y-1">
-          <li>災害ショックは <strong>Region II (カガヤン流域) の年次洪水被害推計</strong>を全地域に同一適用しています。他地域の被害推計は存在しないため、
-              <strong>地域間の差は構造パラメータ (g, VA<sub>n</sub>) の違いのみに由来し、その地域の実際の災害リスクの大小を表しません</strong>。
-              実測では17地域の災害年 GDP 乖離の幅は 0.1 ポイント未満です。</li>
-          <li>推計値として引用できるのは Region II のみです。</li>
+          <li>対象地域は <strong>Region II (カガヤン・バレー地域)</strong> のみです。洪水被害の推計がカガヤン川流域にしかないため、
+              他の16地域は対象から外しました。</li>
         </ul>
       </section>
 
@@ -748,7 +731,7 @@ export default function DsgePage() {
         </h2>
         <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed text-muted">
           <li>計算エンジン: <strong>GNU Octave 6.4 + Dynare 4.5.6</strong> (Linux ソースビルド), Cloud Run 上で実行。1リクエスト ~60秒。</li>
-          <li>地域別 <code>g</code> は PSA 2018PSNA の<strong>実質一人当たり GRDP</strong> (Table 2.2, 2018年基準実質価格) の 2000–2023 年幾何平均成長率。DIGNAD の <code>Calibration!F17</code>「Trend per capita growth rate」の定義に一致する。</li>
+          <li><code>g</code> は Region II の PSA 2018PSNA の<strong>実質一人当たり GRDP</strong> (Table 2.2, 2018年基準実質価格) の 2000–2023 年幾何平均成長率。DIGNAD の <code>Calibration!F17</code>「Trend per capita growth rate」の定義に一致する。</li>
           <li><code>VA<sub>n</sub></code> は<strong>実質価格ベース</strong>の非貿易部門比率。貿易財 = 農林水産 + 鉱業 + 製造業 + 情報通信 + 専門/事業サービス (後2者は IT-BPM 輸出部門) とし、残りを非貿易財とする。</li>
           <li>割引因子は <code>β<sub>t</sub> = (1+g)/(1+r<sub>o</sub>)</code>。これが 1 未満であることが定常状態の存在条件なので、<code>r<sub>o</sub></code> は <code>g + 0.002</code>、<code>r<sub>dc,o</sub></code> は <code>r<sub>o</sub> − 0.005</code> に自動設定される。この幅を超えると Blanchard–Kahn 条件が破れて解が一意でなくなり、<code>r<sub>o</sub> = 0.05</code> では求解自体が発散する。</li>
           <li>USD 換算は「GDP 乖離 (%) × ベースライン GDP (USD)」の単純線形換算で、為替変動・物価変動は考慮していません。</li>
