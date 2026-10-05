@@ -24,6 +24,12 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
+      # Daily data of /flood-monitor: the branch holds only the latest analysis (replaced once a day).
+      - name: Fetch flood monitor data
+        run: |
+          git fetch --depth=1 origin flood-monitor-data
+          mkdir -p public/flood-monitor-data
+          git archive FETCH_HEAD | tar -x -C public/flood-monitor-data
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

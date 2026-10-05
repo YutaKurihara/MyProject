@@ -41,6 +41,17 @@ const tools = [
     status: "available" as const,
     href: "/dsge",
   },
+  {
+    id: "flood-monitor",
+    title: "洪水被害・経済影響 日次モニター",
+    subtitle: "Daily Flood Damage and Economic Impact Monitor",
+    period: "第13期（2025年）",
+    description:
+      "衛星降水量（GSMaP）を入力に、RRIモデルによる浸水解析、直接被害額の算定、DSGEモデルによる経済影響評価までを1日1回自動で実行。フィリピン・カガヤン川流域（Region II）の最新の解析結果と、年間の直接被害額・経済指標を掲載する。",
+    status: "available" as const,
+    href: "/flood-monitor",
+    cta: "モニターを見る",
+  },
 ];
 
 function ToolCard({ tool }: { tool: (typeof tools)[number] }) {
@@ -69,7 +80,7 @@ function ToolCard({ tool }: { tool: (typeof tools)[number] }) {
       <p className="text-sm leading-relaxed text-muted">{tool.description}</p>
       {tool.status === "available" && (
         <p className="mt-4 text-xs font-medium text-accent">
-          Manualを見る &rarr;
+          {"cta" in tool && tool.cta ? tool.cta : "Manualを見る"} &rarr;
         </p>
       )}
     </>
