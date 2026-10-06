@@ -29,6 +29,7 @@ type Monitor = {
     through_pht: string;
     years: ({ year: number; n_floods: number; partial: boolean; loss_rate_pct: number | null; loss_php: number | null } & Amounts)[];
     events: ({ peak_end: string; rain7_mm: number; flooded_km2: number; source: string } & Amounts)[];
+    excluded?: { event: string; peak_end: string; reason: string; total_php: number | null }[];
     economy: {
       status: string; base_year: number | null; grdp_nominal_php: number | null; years: number[];
       indicators: { key: string; label: string; values: number[] }[];
@@ -499,6 +500,9 @@ export default function FloodMonitorPage() {
         </div>
         <ul className="mt-3 ml-5 list-disc space-y-1 text-xs leading-relaxed text-muted">
           <li>洪水は、流域平均の7日間雨量が120mm以上となった降雨イベントとして抽出しています（ピークが10日以上離れたものを別のイベントとして計上）。</li>
+          {(yearly.excluded ?? []).map((e) => (
+            <li key={e.event}>{jpDate(e.peak_end, false)}の降雨イベント{e.total_php != null && `（計算上の直接被害額 ${oku(e.total_php)}億ペソ）`}は、{e.reason}、年間の集計から除外しています。</li>
+          ))}
           <li>GRDP毀損率は、{yearly.years[0].year}年以降の洪水が発生しなかった場合のGRDP（ベースライン）に対する、当該年のGRDPの低下率です。</li>
           {economy.grdp_nominal_php != null && (
             <li>GRDP毀損額は、{economy.base_year}年の名目GRDP（{oku(economy.grdp_nominal_php, 0)}億ペソ）にGRDP毀損率を乗じた値です。</li>
