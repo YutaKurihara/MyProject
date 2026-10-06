@@ -89,7 +89,7 @@ function Tile({ label, value, unit, note }: { label: string; value: string; unit
         {value}
         <span className="ml-1 text-xs font-medium">{unit}</span>
       </div>
-      {note && <div className="mt-0.5 text-[11px] text-muted">{note}</div>}
+      {note && <div className="mt-0.5 whitespace-pre-line text-[11px] text-muted">{note}</div>}
     </div>
   );
 }
@@ -166,7 +166,7 @@ function YearChart({ years, upto }: { years: Monitor["yearly"]["years"]; upto: s
   const rates = years.map((y) => y.loss_rate_pct);
   const has = rates.every((r) => r != null);
   const top2 = padT + h1 + gap;
-  const t2 = niceTicks(0, Math.max(0.1, ...rates.map((r) => r ?? 0)) * 1.15), max2 = t2[t2.length - 1];
+  const t2 = niceTicks(0, Math.max(0.1, ...rates.map((r) => r ?? 0)) * 1.3), max2 = t2[t2.length - 1];
   const y2 = (v: number) => top2 + (1 - v / max2) * h2;
   const path = rates.map((r, i) => `${i === 0 ? "M" : "L"}${cx(i).toFixed(1)},${y2(r ?? 0).toFixed(1)}`).join(" ");
   return (
@@ -187,7 +187,7 @@ function YearChart({ years, upto }: { years: Monitor["yearly"]["years"]; upto: s
       <line x1={padL} y1={padT} x2={padL} y2={padT + h1} stroke={AXIS} />
       <line x1={padL} y1={padT + h1} x2={w - padR} y2={padT + h1} stroke={AXIS} />
 
-      <text x={padL} y={top2 - 9} fontSize="11" fill={TEXT}>GRDP毀損率（%）</text>
+      <text x={padL} y={top2 - 9} fontSize="11" fill={TEXT}>GRDP毀損率（%）と毀損額（億ペソ）</text>
       {t2.map((t) => (
         <g key={`b${t}`}>
           <line x1={padL} y1={y2(t)} x2={w - padR} y2={y2(t)} stroke={GRID} />
@@ -200,7 +200,8 @@ function YearChart({ years, upto }: { years: Monitor["yearly"]["years"]; upto: s
           {rates.map((r, i) => (
             <g key={i}>
               <circle cx={cx(i)} cy={y2(r ?? 0)} r="3.2" fill={NAVY} className="dark:fill-sky-300" />
-              <text x={cx(i)} y={y2(r ?? 0) - 8} textAnchor="middle" fontSize="11" fill={NAVY} className="dark:fill-slate-200">{(r ?? 0).toFixed(2)}</text>
+              <text x={cx(i)} y={y2(r ?? 0) - 21} textAnchor="middle" fontSize="11" fill={NAVY} className="dark:fill-slate-200">{(r ?? 0).toFixed(2)}%</text>
+              {years[i].loss_php != null && <text x={cx(i)} y={y2(r ?? 0) - 8} textAnchor="middle" fontSize="10" fill={TEXT}>{oku(years[i].loss_php as number)}億</text>}
             </g>
           ))}
         </>
@@ -366,7 +367,7 @@ export default function FloodMonitorPage() {
           <Tile label="浸水面積（浸水深0.1m以上）" value={int(flood.flooded_km2)} unit="km²" />
           <Tile label="直接被害額" value={flood.detected ? oku(damage.total) : "0"} unit="億ペソ" />
           <Tile label={`${current.year}年の累計直接被害額`} value={oku(current.total)} unit="億ペソ"
-            note={current.loss_rate_pct != null ? `GRDP毀損率 ${current.loss_rate_pct.toFixed(2)}%（${upto}）` : `洪水 ${current.n_floods}回（${upto}）`} />
+            note={current.loss_rate_pct != null ? `GRDP毀損率 ${current.loss_rate_pct.toFixed(2)}%${current.loss_php != null ? `（${oku(current.loss_php)}億ペソ）` : ""}\n${upto}` : `洪水 ${current.n_floods}回（${upto}）`} />
         </div>
       </Section>
 
