@@ -58,12 +58,14 @@ function niceTicks(lo: number, hi: number, count = 4): number[] {
   const mag = Math.pow(10, Math.floor(Math.log10(raw)));
   const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? raw;
   const out: number[] = [];
-  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) out.push(Math.abs(v) < step * 1e-6 ? 0 : v);
+  // the ticks enclose [lo, hi], so the last tick can be used as the top of the axis
+  const first = Math.floor(lo / step + 1e-6) * step, last = Math.ceil(hi / step - 1e-6) * step;
+  for (let v = first; v <= last + step * 1e-6; v += step) out.push(Math.abs(v) < step * 1e-6 ? 0 : v);
   return out;
 }
 const tickLabel = (v: number, ticks: number[]) => {
   const step = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : 1;
-  return v.toFixed(step >= 1 ? 0 : step >= 0.1 ? 1 : 2);
+  return v.toFixed(Number.isInteger(step) ? 0 : Number.isInteger(+(step * 10).toFixed(6)) ? 1 : 2);
 };
 
 /* ============================================================================
@@ -223,9 +225,8 @@ function IndicatorChart({ title, years, lines, lastFloodYear }:
   const innerW = w - padL - padR, innerH = h - padT - padB;
   const all = lines.flatMap((l) => l.values);
   const lo = Math.min(0, ...all), hi = Math.max(0, ...all);
-  const pad = (hi - lo || 1) * 0.08;
-  const ticks = niceTicks(lo - pad, hi + pad, 4);
-  const yMin = Math.min(lo - pad, ticks[0]), yMax = Math.max(hi + pad, ticks[ticks.length - 1]);
+  const pad = (hi - lo || 1) * 0.08, yMin = lo - pad, yMax = hi + pad;
+  const ticks = niceTicks(lo, hi, 4).filter((t) => t >= yMin && t <= yMax);
   const x = (i: number) => padL + (i / (years.length - 1)) * innerW;
   const y = (v: number) => padT + ((yMax - v) / (yMax - yMin)) * innerH;
   const k = years.indexOf(lastFloodYear);
