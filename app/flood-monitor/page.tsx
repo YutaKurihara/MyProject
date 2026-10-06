@@ -46,7 +46,7 @@ type Monitor = {
 const OKU = 1e8; // 億ペソ
 const oku = (php: number, digits = 1) => (php / OKU).toLocaleString("ja-JP", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const int = (v: number) => Math.round(v).toLocaleString("ja-JP");
-const parse = (s: string) => new Date(s.replace(" ", "T") + (s.length <= 16 ? ":00" : "") + "Z"); // times are handled as wall-clock values
+const parse = (s: string) => new Date((s.length === 10 ? s + "T00:00" : s.replace(" ", "T")) + (s.length === 16 ? ":00" : "") + "Z"); // times are handled as wall-clock values
 const jpDate = (s: string, hour = true) => {
   const d = parse(s);
   return `${d.getUTCFullYear()}年${d.getUTCMonth() + 1}月${d.getUTCDate()}日` + (hour ? ` ${d.getUTCHours()}時` : "");
