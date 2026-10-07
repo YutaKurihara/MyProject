@@ -27,7 +27,7 @@ const tools = [
     subtitle: "Climate Change Impact Assessment",
     period: "第11期（2024年）",
     description:
-      "NASA NEX-GDDP-CMIP6のGCMデータをGSMaPまたは地上観測データで補正する順序統計量補正手法。CMIP6の全球気候モデル精度評価からダウンロード、バイアス補正までをPythonノートブックで提供。",
+      "NASA NEX-GDDP-CMIP6のGCMデータをGSMaPまたは地上観測データで補正する順序統計量補正手法。CMIP6の全球気候モデル精度評価からデータ取得、バイアス補正、流域平均雨量の確率雨量の算定までを6つのPythonノートブックで提供（2026年10月更新）。",
     status: "available" as const,
     href: "/gcm-downscaling",
   },
